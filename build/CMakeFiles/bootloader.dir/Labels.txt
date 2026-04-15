@@ -1,0 +1,13 @@
+# Target labels
+ bootloader
+# Source files and their labels
+/home/mikoivul/smart_dashboard/build/CMakeFiles/bootloader
+/home/mikoivul/smart_dashboard/build/CMakeFiles/bootloader.rule
+/home/mikoivul/smart_dashboard/build/CMakeFiles/bootloader-complete.rule
+/home/mikoivul/smart_dashboard/build/bootloader-prefix/src/bootloader-stamp/bootloader-build.rule
+/home/mikoivul/smart_dashboard/build/bootloader-prefix/src/bootloader-stamp/bootloader-configure.rule
+/home/mikoivul/smart_dashboard/build/bootloader-prefix/src/bootloader-stamp/bootloader-download.rule
+/home/mikoivul/smart_dashboard/build/bootloader-prefix/src/bootloader-stamp/bootloader-install.rule
+/home/mikoivul/smart_dashboard/build/bootloader-prefix/src/bootloader-stamp/bootloader-mkdir.rule
+/home/mikoivul/smart_dashboard/build/bootloader-prefix/src/bootloader-stamp/bootloader-patch.rule
+/home/mikoivul/smart_dashboard/build/bootloader-prefix/src/bootloader-stamp/bootloader-update.rule

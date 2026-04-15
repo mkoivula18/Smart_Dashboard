@@ -1,0 +1,2 @@
+source /home/mikoivul/smart_dashboard/build/bootloader/gdbinit/symbols
+source /home/mikoivul/smart_dashboard/build/bootloader/gdbinit/connect
