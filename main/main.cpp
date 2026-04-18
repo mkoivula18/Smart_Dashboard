@@ -29,12 +29,12 @@ extern "C" void app_main(void)
 
     epd.Clear();
 
-    EpdIf::DelayMs(2000);
+    // EpdIf::DelayMs(2000);
 
-    static unsigned char black_image[800 * 480 / 8];
-    memset(black_image, 0x00, sizeof(black_image));
+    // static unsigned char black_image[800 * 480 / 8];
+    // memset(black_image, 0x00, sizeof(black_image));
 
-    epd.DisplayFrame(black_image);
+    // epd.DisplayFrame(black_image);
 
     while (true) {
         vTaskDelay(pdMS_TO_TICKS(1000));

@@ -305,7 +305,7 @@ void Epd::Clear(void) {
     //     SendData(0x00);
     // }
     SendCommand(0x13);
-    for(unsigned long i=0; i<height*width; i++)	{
+    for(unsigned long i=0; i<height*width/8; i++)	{
         SendData(0x00);
     }
     SendCommand(0x12);
