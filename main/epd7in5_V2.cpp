@@ -91,7 +91,9 @@ Epd::Epd() {
     cs_pin = CS_PIN;
     busy_pin = BUSY_PIN;
     width = EPD_WIDTH;
+    widthInBytes = width / 8;
     height = EPD_HEIGHT;
+    heightInBytes = height / 8;
 };
 
 int Epd::Init(void) {
@@ -198,16 +200,23 @@ void Epd::SendData(unsigned char data){
     SpiTransfer(data);
 }
 
+void Epd::SendDataBuffer(unsigned char *buffer, size_t len)
+{
+    DigitalWrite(dc_pin, HIGH);
+    SpiTransferBuffer(buffer, len);
+}
+
 /**
  *  @brief: Wait until the busy_pin goes HIGH
  */
 void Epd::WaitUntilIdle(void) {
     unsigned char busy;
     printf("e-Paper Busy\r\n ");
-    do{
+    do {
         SendCommand(0x71);
         busy = DigitalRead(busy_pin);
-    }while(busy == 0);
+        DelayMs(20);
+    } while(busy == 0);
     printf("e-Paper Busy Release\r\n ");
     DelayMs(20);
 }
@@ -239,6 +248,20 @@ void Epd::DisplayFrame(const unsigned char* frame_buffer) {
     WaitUntilIdle();
 }
 
+void Epd::DisplayFrameBuffer(unsigned char* frame_buffer, size_t len) {
+    SendCommand(0x13);
+
+    *frame_buffer = ~(*frame_buffer);
+
+    // Sends SPI transactions for each row (row = 100 bytes = 800 bits)
+    for (unsigned long j = 0; j < height; j++)
+    {
+        SendDataBuffer(frame_buffer + j * 100, width / 8);
+    }
+    SendCommand(0x12);
+    DelayMs(100);
+    WaitUntilIdle();
+}
 // void Epd::Displaypart(const unsigned char* pbuffer, unsigned long xStart, unsigned long yStart,unsigned long Picture_Width,unsigned long Picture_Height) {
 //     SendCommand(0x13);
 //     // xStart = xStart/8;

@@ -33,6 +33,9 @@
 #define EPD_WIDTH       800
 #define EPD_HEIGHT      480
 
+#define FRAME_BUFFER_SIZE_IN_BITS   EPD_HEIGHT * EPD_WIDTH
+#define FRAME_BUFFER_SIZE_IN_BYTES  EPD_HEIGHT * EPD_WIDTH / 8
+
 class Epd : EpdIf {
 public:
     Epd();
@@ -42,8 +45,12 @@ public:
     void Reset(void);
     void SetLut(void);
     void DisplayFrame(const unsigned char* frame_buffer);
+    void DisplayFrameBuffer(unsigned char* frame_buffer, size_t len);
     void SendCommand(unsigned char command);
     void SendData(unsigned char data);
+
+    void SendDataBuffer(unsigned char *data, size_t len);
+
     void Sleep(void);
     void Clear(void);
     void Displaypart(const unsigned char* pbuffer, unsigned long Start_X, unsigned long Start_Y,unsigned long END_X,unsigned long END_Y);
@@ -54,7 +61,9 @@ private:
     unsigned int cs_pin;
     unsigned int busy_pin;
     unsigned long width;
+    unsigned long widthInBytes;
     unsigned long height;
+    unsigned long heightInBytes;
 
 	void SetLut(unsigned char *lut);
     void SetLut_by_host(unsigned char *lut_vcom, unsigned char *lut_ww, unsigned char *lut_bw, unsigned char *lut_wb, unsigned char *lut_bb);

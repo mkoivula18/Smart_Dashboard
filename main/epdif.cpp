@@ -50,6 +50,27 @@ void EpdIf::SpiTransfer(unsigned char data)
     DigitalWrite(CS_PIN, HIGH);
 }
 
+void EpdIf::SpiTransferBuffer(unsigned char *buffer, size_t len)
+{
+    if (spi_device == nullptr) {
+        printf("SpiTransfer: spi_device is null\n");
+        return;
+    }
+
+    spi_transaction_t transaction{};
+    transaction.length = len * 8;
+    transaction.tx_buffer = buffer;
+
+
+    DigitalWrite(CS_PIN, LOW);
+
+    spi_device_transmit(spi_device, &transaction);
+
+    DigitalWrite(CS_PIN, HIGH);
+
+}
+
+
 int EpdIf::IfInit(void)
 {
     // Output from ESP32 to the E-Ink screen
@@ -75,7 +96,7 @@ int EpdIf::IfInit(void)
     config_bus.sclk_io_num = SCK_PIN;
     config_bus.quadhd_io_num = -1;      // Quad pins are unused (?)
     config_bus.quadwp_io_num = -1;      // Quad pins are unused (?)
-    config_bus.max_transfer_sz = 4;
+    config_bus.max_transfer_sz = 100;
 
     spi_device_interface_config_t config_device{};
     config_device.clock_speed_hz = 2 * 1000 * 1000;     // 2 MHz

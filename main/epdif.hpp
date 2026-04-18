@@ -57,6 +57,7 @@ public:
     static int  DigitalRead(int pin);
     static void DelayMs(unsigned int delaytime);
     static void SpiTransfer(unsigned char data);
+    static void SpiTransferBuffer(unsigned char *data, size_t len);
 
 private:
     static void setupGpioConfig(gpio_config_t *config, uint64_t pin_mask, gpio_mode_t mode);

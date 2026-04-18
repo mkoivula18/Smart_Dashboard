@@ -9,5 +9,10 @@
     "idf.port": "/dev/ttyACM0",
 
     "C_Cpp.default.compileCommands": "${workspaceFolder}/build/compile_commands.json",
-    "C_Cpp.intelliSenseEngine": "default"
+    "C_Cpp.intelliSenseEngine": "default",
+
+    "editor.fontFamily": "JetBrains Mono",
+    "editor.fontLigatures": true,
+    "editor.bracketPairColorization.enabled": true,
+    "terminal.integrated.fontFamily": "JetBrains Mono"
 }
