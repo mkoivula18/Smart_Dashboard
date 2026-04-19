@@ -3,7 +3,10 @@
 #include "esp_chip_info.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+
 #include "Display.hpp"
+#include "WeatherStation.hpp"
+#include "secrets.hpp"
 
 // Initialize buffer with zeros
 unsigned char framebuffer[FRAME_BUFFER_SIZE_IN_BYTES*2] {};
@@ -15,11 +18,14 @@ extern "C" void app_main(void)
     print_esp32_info();
 
     Display display(framebuffer);
-    // display.set_sanity_screen_markings();
-    // display.set_test_screen_figures();
+
+    WeatherStation weather_station;
+
+    weather_station.connect_to_wifi(WIFI_SSID, WIFI_PASSWORD);
+
+
     char temperature[3] = "14";
     lv_obj_t *big_ass_number = display.set_big_number_widget(temperature, "Temperature");
-
     lv_obj_align(big_ass_number, LV_ALIGN_DEFAULT, 40, 40);
 
     while(true)
