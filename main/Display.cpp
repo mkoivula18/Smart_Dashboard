@@ -48,15 +48,38 @@ lv_obj_t *Display::set_big_number_widget(char *value, char *text)
     lv_label_set_text(caption, text);
     lv_obj_align(caption, LV_ALIGN_BOTTOM_LEFT, 4, 0);
 
-    uint32_t box_padding = 10;
-    lv_obj_t *box = lv_obj_create(metric);
-    lv_obj_set_size(box, width + box_padding, height + box_padding);
-    lv_obj_align(box, LV_ALIGN_CENTER, 0, 0);
-    lv_obj_set_style_bg_opa(box, LV_OPA_TRANSP, 0);
-    lv_obj_set_style_border_color(box, lv_color_black(), 0);
-    lv_obj_set_style_border_width(box, 4, 0);
-
     return metric;
+}
+
+lv_obj_t *Display::create_wifi_widget(std::string &value)
+{
+    uint32_t width = 280;
+    uint32_t height = 80;
+
+    lv_obj_t *metric = lv_obj_create(lv_screen_active());
+    lv_obj_set_size(metric, width, height);
+    lv_obj_align(metric, LV_ALIGN_TOP_RIGHT, -6, -6);
+
+    lv_obj_t *wifi_icon = lv_label_create(metric);
+    lv_label_set_text(wifi_icon, LV_SYMBOL_WIFI);
+    lv_obj_set_style_text_font(wifi_icon, &lv_font_montserrat_24, 0);
+    lv_obj_set_style_text_color(wifi_icon, lv_color_black(), 0);
+    lv_obj_align(wifi_icon, LV_ALIGN_LEFT_MID, 8, 0);
+    
+    lv_obj_t *wifi_text = lv_label_create(metric);
+    lv_label_set_text(wifi_text, value.c_str());
+    lv_obj_set_style_text_font(wifi_text, &lv_font_montserrat_24, 0);
+    lv_obj_set_style_text_color(wifi_text, lv_color_black(), 0);
+    lv_obj_align_to(wifi_text, wifi_icon, LV_ALIGN_OUT_RIGHT_MID, 8, 0);
+
+    // lv_obj_t *box = lv_obj_create(metric);
+    // lv_obj_set_size(box, width + 2, height + 2);
+    // lv_obj_align(box, LV_ALIGN_CENTER, 0, 0);
+    // lv_obj_set_style_bg_opa(box, LV_OPA_TRANSP, 0);
+    // lv_obj_set_style_border_color(box, lv_color_black(), 0);
+    // lv_obj_set_style_border_width(box, 3, 0);
+
+    return wifi_icon;
 }
 
 void Display::set_test_screen_figures()

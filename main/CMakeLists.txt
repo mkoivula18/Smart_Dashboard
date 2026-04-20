@@ -5,6 +5,7 @@ idf_component_register(
         "drivers/epdif.cpp"
         "Display.cpp"
         "WeatherStation.cpp"
+        "WifiHelper.cpp"
     INCLUDE_DIRS 
         "."
         "drivers"

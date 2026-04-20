@@ -6,7 +6,12 @@
 
 #include "Display.hpp"
 #include "WeatherStation.hpp"
+#include "WifiHelper.hpp"
 #include "secrets.hpp"
+
+#include <string>
+
+#include <pthread.h>
 
 // Initialize buffer with zeros
 unsigned char framebuffer[FRAME_BUFFER_SIZE_IN_BYTES*2] {};
@@ -19,14 +24,19 @@ extern "C" void app_main(void)
 
     Display display(framebuffer);
 
-    WeatherStation weather_station;
+    WifiHelper wifi_helper;
 
-    weather_station.connect_to_wifi(WIFI_SSID, WIFI_PASSWORD);
+    bool wifi_connected = wifi_helper.connect_to_wifi(WIFI_SSID, WIFI_PASSWORD);
 
+    std::string text = (wifi_connected) ? "Connected" : "Not connected";
 
     char temperature[3] = "14";
     lv_obj_t *big_ass_number = display.set_big_number_widget(temperature, "Temperature");
     lv_obj_align(big_ass_number, LV_ALIGN_DEFAULT, 40, 40);
+
+    display.create_wifi_widget(text);
+
+    WeatherStation weather_station;
 
     while(true)
     {

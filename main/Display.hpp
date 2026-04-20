@@ -6,6 +6,8 @@
 #include "esp_timer.h"
 #include "lvgl.h"
 
+#include <string>
+
 class Display
 {
     public:
@@ -28,6 +30,7 @@ class Display
         void set_sanity_screen_markings();
         void set_test_screen_figures();
         lv_obj_t *set_big_number_widget(char *value, char *text);
+        lv_obj_t *create_wifi_widget(std::string &value);
 
         lv_display_t *initialize_lvgl_display();
 
