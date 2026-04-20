@@ -14,5 +14,6 @@
     "editor.fontFamily": "JetBrains Mono",
     "editor.fontLigatures": true,
     "editor.bracketPairColorization.enabled": true,
-    "terminal.integrated.fontFamily": "JetBrains Mono"
+    "terminal.integrated.fontFamily": "JetBrains Mono",
+    "editor.wordWrap": "on"
 }
