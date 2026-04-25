@@ -1,2 +1,7 @@
 build/
 main/secrets.hpp
+.codex
+codex-skills
+managed_components/
+data.xml
+.vscode/smart_dashboard.code-workspace

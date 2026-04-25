@@ -32,6 +32,8 @@
 // Display resolution
 #define EPD_WIDTH       800
 #define EPD_HEIGHT      480
+// #define EPD_WIDTH       480
+// #define EPD_HEIGHT      800
 
 #define FRAME_BUFFER_SIZE_IN_BITS   EPD_HEIGHT * EPD_WIDTH
 #define FRAME_BUFFER_SIZE_IN_BYTES  EPD_HEIGHT * EPD_WIDTH / 8

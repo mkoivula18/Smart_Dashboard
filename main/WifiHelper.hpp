@@ -7,7 +7,7 @@ public:
     {
         printf("WifiHelper here hello hazagaan?\n");
     }
-    bool connect_to_wifi(const char *ssid, const char *password);    
+    bool connect_to_wifi(const char *ssid, const char *password);
 
 private:
 

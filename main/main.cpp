@@ -7,11 +7,11 @@
 #include "Display.hpp"
 #include "WeatherStation.hpp"
 #include "WifiHelper.hpp"
-#include "secrets.hpp"
+#include "DataHandler.hpp"
 
+#include "secrets.hpp"
 #include <string>
 
-#include <pthread.h>
 
 // Initialize buffer with zeros
 unsigned char framebuffer[FRAME_BUFFER_SIZE_IN_BYTES*2] {};
@@ -23,25 +23,29 @@ extern "C" void app_main(void)
     print_esp32_info();
 
     Display display(framebuffer);
-
     WifiHelper wifi_helper;
-
     bool wifi_connected = wifi_helper.connect_to_wifi(WIFI_SSID, WIFI_PASSWORD);
-
     std::string text = (wifi_connected) ? "Connected" : "Not connected";
 
-    char temperature[3] = "14";
-    lv_obj_t *big_ass_number = display.set_big_number_widget(temperature, "Temperature");
-    lv_obj_align(big_ass_number, LV_ALIGN_DEFAULT, 40, 40);
+    DataHandler data_handler;
+    data_handler.sync_time_with_ntp();
 
     display.create_wifi_widget(text);
 
-    WeatherStation weather_station;
+    display.set_sanity_screen_markings();
 
     while(true)
     {
+        // data_handler.update_current_temperature();
+        data_handler.update_current_time();
+
+        if (data_handler.new_data_available())
+        {
+            // display.set_temperature_number(data_handler.get_current_temperature().c_str());
+            data_handler.set_new_data_available(false);
+        }
         lv_timer_handler();
-        vTaskDelay(pdMS_TO_TICKS(50));
+        vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }
 

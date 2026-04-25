@@ -6,7 +6,12 @@ idf_component_register(
         "Display.cpp"
         "WeatherStation.cpp"
         "WifiHelper.cpp"
+        "InternetUser.cpp"
+        "DataHandler.cpp"
+        "widgets/WeatherWidget.cpp"
+        "widgets/WifiWidget.cpp"
     INCLUDE_DIRS 
         "."
         "drivers"
+        "widgets"
 )
