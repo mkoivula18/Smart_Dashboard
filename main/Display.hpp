@@ -12,6 +12,9 @@
 
 #include "WeatherWidget.hpp"
 #include "WifiWidget.hpp"
+#include "ClockWidget.hpp"
+
+#include "CommonDefs.hpp"
 
 class Display
 {
@@ -22,18 +25,25 @@ class Display
             printf("Epd Init %s\n", (ret ? "failed" : "successful!"));
 
             lv_init();
-            printf("lv_init done!\n");
-            
             initialize_lvgl_display();
-            printf("Display is created!\n");
 
             weather_widget = new WeatherWidget(main_screen, "9", "Ulkolampotila");
+            weather_widget->set_position(LV_ALIGN_LEFT_MID, 0, 0);
+            // weather_widget->add_borders_to_container();
+
+            wifi_widget = new WifiWidget(main_screen, "Unknown status");
+            wifi_widget->set_position(LV_ALIGN_TOP_RIGHT, 0, 0);
+            // wifi_widget->add_borders_to_container();
+
+            clock_widget = new ClockWidget(main_screen, "XX:XX");
+            clock_widget->set_position(LV_ALIGN_OUT_TOP_MID, 0, 0);
+            // clock_widget->add_borders_to_container();
         }
 
         ~Display()
         {
-            // delete weather_widget;
-            // delete wifi_widget;
+            delete weather_widget;
+            delete wifi_widget;
         }
 
         static void flush_callback(lv_display_t *display, const lv_area_t *area, unsigned char *px_map);
@@ -42,11 +52,20 @@ class Display
 
         void set_sanity_screen_markings();
         void set_test_screen_figures();
-        lv_obj_t *create_wifi_widget(std::string &value);
+
+        void set_wifi_status(const char* status_message)
+        {
+            wifi_widget->set_status(status_message);
+        }
 
         void set_temperature_number(const char* value)
         {
-            lv_label_set_text(temperature_number, value);
+            weather_widget->set_value(value);
+        }
+
+        void update_clock(const char* time)
+        {
+            clock_widget->set_time(time);
         }
 
         lv_display_t *initialize_lvgl_display();
@@ -57,7 +76,8 @@ class Display
 
         lv_obj_t *temperature_number;
 
+        lv_obj_t *main_screen           = nullptr;
         WeatherWidget *weather_widget   = nullptr;
         WifiWidget *wifi_widget         = nullptr;
-        lv_obj_t *main_screen           = nullptr;
+        ClockWidget *clock_widget       = nullptr;
 };

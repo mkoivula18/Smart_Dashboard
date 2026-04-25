@@ -24,26 +24,28 @@ extern "C" void app_main(void)
 
     Display display(framebuffer);
     WifiHelper wifi_helper;
+
     bool wifi_connected = wifi_helper.connect_to_wifi(WIFI_SSID, WIFI_PASSWORD);
-    std::string text = (wifi_connected) ? "Connected" : "Not connected";
+    std::string wifi_status_text = (wifi_connected) ? "Connected" : "Not connected";
+    display.set_wifi_status(wifi_status_text.c_str());
 
     DataHandler data_handler;
     data_handler.sync_time_with_ntp();
-
-    display.create_wifi_widget(text);
 
     display.set_sanity_screen_markings();
 
     while(true)
     {
-        // data_handler.update_current_temperature();
-        data_handler.update_current_time();
+        data_handler.update_current_temperature();
+        // data_handler.update_current_time();
 
         if (data_handler.new_data_available())
         {
-            // display.set_temperature_number(data_handler.get_current_temperature().c_str());
+            // display.update_clock(data_handler.get_current_time().c_str());
+            display.set_temperature_number(data_handler.get_current_temperature().c_str());
             data_handler.set_new_data_available(false);
         }
+
         lv_timer_handler();
         vTaskDelay(pdMS_TO_TICKS(1000));
     }

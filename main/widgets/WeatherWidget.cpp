@@ -48,12 +48,3 @@ void WeatherWidget::set_caption(const char *caption)
 
     lv_label_set_text(caption_label_, caption);
 }
-
-void WeatherWidget::set_position(lv_align_t align, lv_coord_t x_ofs, lv_coord_t y_ofs)
-{
-    if (container_ == nullptr) {
-        return;
-    }
-
-    lv_obj_align(container_, align, x_ofs, y_ofs);
-}

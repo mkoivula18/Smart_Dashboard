@@ -10,6 +10,7 @@ idf_component_register(
         "DataHandler.cpp"
         "widgets/WeatherWidget.cpp"
         "widgets/WifiWidget.cpp"
+        "widgets/ClockWidget.cpp"
     INCLUDE_DIRS 
         "."
         "drivers"

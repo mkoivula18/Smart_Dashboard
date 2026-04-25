@@ -43,12 +43,3 @@ void WifiWidget::set_connected(bool connected)
         connected ? lv_color_black() : lv_palette_main(LV_PALETTE_GREY),
         0);
 }
-
-void WifiWidget::set_position(lv_align_t align, lv_coord_t x_ofs, lv_coord_t y_ofs)
-{
-    if (container_ == nullptr) {
-        return;
-    }
-
-    lv_obj_align(container_, align, x_ofs, y_ofs);
-}

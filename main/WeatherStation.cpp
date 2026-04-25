@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <expat.h>
+#include <cmath>
 
 static void start_element(void *user_data, const XML_Char *name, const XML_Char **attrs);
 static void character_data(void *user_data, const XML_Char *text, int len);
@@ -40,6 +41,11 @@ std::string WeatherStation::get_temperature_xml()
         XML_ParserFree(parser);
         return "";
     }
+
+    // Turn result from float to integer
+    int temp = (int)std::round(std::stof(parser_state.latest_temperature));
+
+    parser_state.latest_temperature = std::to_string(temp);
 
     ESP_LOGI(TAG, "Latest time: %s, Latest temperature: %sC",
              parser_state.latest_time.c_str(),

@@ -17,7 +17,7 @@ lv_display_t *Display::initialize_lvgl_display()
     lv_display_set_user_data(display, this);
 
     main_screen = lv_obj_create(lv_screen_active());
-    lv_obj_set_size(main_screen, 730, 480);
+    lv_obj_set_size(main_screen, SCREEN_SIZE_WIDTH, SCREEN_SIZE_HEIGHT);
     lv_obj_center(main_screen);
     lv_obj_set_style_bg_opa(main_screen, LV_OPA_TRANSP, 0);
     lv_obj_set_style_border_color(main_screen, lv_color_black(), 0);
@@ -30,38 +30,6 @@ lv_display_t *Display::initialize_lvgl_display()
 uint32_t Display::get_esp_time_cb()
 {
     return (uint32_t)(esp_timer_get_time() / 1000ULL);
-}
-
-lv_obj_t *Display::create_wifi_widget(std::string &value)
-{
-    uint32_t width = 280;
-    uint32_t height = 80;
-
-    lv_obj_t *metric = lv_obj_create(main_screen);
-    // lv_obj_t *metric = lv_obj_create(lv_screen_active());
-    lv_obj_set_size(metric, width, height);
-    lv_obj_align(metric, LV_ALIGN_TOP_RIGHT, -6, -6);
-
-    lv_obj_t *wifi_icon = lv_label_create(metric);
-    lv_label_set_text(wifi_icon, LV_SYMBOL_WIFI);
-    lv_obj_set_style_text_font(wifi_icon, &lv_font_montserrat_24, 0);
-    lv_obj_set_style_text_color(wifi_icon, lv_color_black(), 0);
-    lv_obj_align(wifi_icon, LV_ALIGN_LEFT_MID, 8, 0);
-
-    lv_obj_t *wifi_text = lv_label_create(metric);
-    lv_label_set_text(wifi_text, value.c_str());
-    lv_obj_set_style_text_font(wifi_text, &lv_font_montserrat_24, 0);
-    lv_obj_set_style_text_color(wifi_text, lv_color_black(), 0);
-    lv_obj_align_to(wifi_text, wifi_icon, LV_ALIGN_OUT_RIGHT_MID, 8, 0);
-
-    // lv_obj_t *box = lv_obj_create(metric);
-    // lv_obj_set_size(box, width + 2, height + 2);
-    // lv_obj_align(box, LV_ALIGN_CENTER, 0, 0);
-    // lv_obj_set_style_bg_opa(box, LV_OPA_TRANSP, 0);
-    // lv_obj_set_style_border_color(box, lv_color_black(), 0);
-    // lv_obj_set_style_border_width(box, 3, 0);
-
-    return wifi_icon;
 }
 
 void Display::set_test_screen_figures()

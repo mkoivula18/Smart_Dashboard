@@ -36,7 +36,7 @@ void DataHandler::update_current_temperature()
     std::string new_temperature = weather_station.get_temperature_xml();
     if (new_temperature != current_temperature)
     {
-        current_temperature = new_temperature;
+        set_current_temperature(new_temperature);
         set_new_data_available(true);
     }
 }
@@ -54,10 +54,15 @@ void DataHandler::update_current_time()
 
     char buffer[10];
     strftime(buffer, sizeof(buffer), "%H:%M", &time_info);
-    current_time.assign(buffer);
 
-    printf("Current time: %s\n", current_time.c_str());
-    // set_new_data_available(true);
+    std::string new_time;
+    new_time.assign(buffer);
+
+    if (current_time != new_time)
+    {
+        set_current_time(new_time);
+        set_new_data_available(true);
+    }
 }
 
 void DataHandler::set_current_temperature(const std::string& temperature)
