@@ -6,11 +6,8 @@ ESP32 + E-ink smart screen project
 
 ## Preview
 
-Photo here:
+![Photo of the current WIP version:](IMG_9280.jpeg)
 
-```md
-PHOTO HERE SOMEHOW, FIGURE IT OUT
-```
 
 ## Features
 
