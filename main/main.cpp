@@ -32,7 +32,8 @@ extern "C" void app_main(void)
     DataHandler data_handler;
     data_handler.sync_time_with_ntp();
 
-    display.set_sanity_screen_markings();
+    // display.set_sanity_screen_markings();
+    data_handler.update_current_time();
 
     while(true)
     {
@@ -41,7 +42,7 @@ extern "C" void app_main(void)
 
         if (data_handler.new_data_available())
         {
-            // display.update_clock(data_handler.get_current_time().c_str());
+            display.update_clock(data_handler.get_current_time().c_str());
             display.set_temperature_number(data_handler.get_current_temperature().c_str());
             data_handler.set_new_data_available(false);
         }

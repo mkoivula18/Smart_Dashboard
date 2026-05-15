@@ -19,32 +19,8 @@
 class Display
 {
     public:
-        Display(unsigned char *buffer) : framebuffer(buffer)
-        {
-            int ret = epd.Init();
-            printf("Epd Init %s\n", (ret ? "failed" : "successful!"));
-
-            lv_init();
-            initialize_lvgl_display();
-
-            weather_widget = new WeatherWidget(main_screen, "9", "Ulkolampotila");
-            weather_widget->set_position(LV_ALIGN_LEFT_MID, 0, 0);
-            // weather_widget->add_borders_to_container();
-
-            wifi_widget = new WifiWidget(main_screen, "Unknown status");
-            wifi_widget->set_position(LV_ALIGN_TOP_RIGHT, 0, 0);
-            // wifi_widget->add_borders_to_container();
-
-            clock_widget = new ClockWidget(main_screen, "XX:XX");
-            clock_widget->set_position(LV_ALIGN_OUT_TOP_MID, 0, 0);
-            // clock_widget->add_borders_to_container();
-        }
-
-        ~Display()
-        {
-            delete weather_widget;
-            delete wifi_widget;
-        }
+        Display(unsigned char *buffer);
+        ~Display();
 
         static void flush_callback(lv_display_t *display, const lv_area_t *area, unsigned char *px_map);
         static uint32_t get_esp_time_cb(void);

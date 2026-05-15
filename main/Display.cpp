@@ -5,6 +5,36 @@
 #include "esp_log.h"
 #include "esp_timer.h"
 
+Display::Display(unsigned char *buffer) : framebuffer(buffer)
+{
+    int ret = epd.Init();
+    printf("Epd Init %s\n", (ret ? "failed" : "successful!"));
+
+    lv_init();
+    initialize_lvgl_display();
+
+    clock_widget = new ClockWidget(main_screen, "XX:XX");
+    clock_widget->set_position(LV_ALIGN_OUT_TOP_MID, 0, 0);
+    // clock_widget->add_borders_to_container();
+
+    weather_widget = new WeatherWidget(main_screen, "9", "Ulkolampotila");
+    // weather_widget->add_borders_to_container();
+
+    wifi_widget = new WifiWidget(main_screen, "Unknown status");
+    wifi_widget->set_position(LV_ALIGN_TOP_RIGHT, 0, 0);
+    // wifi_widget->add_borders_to_container();
+
+    lv_obj_set_flex_flow(main_screen, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_style_pad_row(main_screen, 8, 0);
+
+}
+
+Display::~Display()
+{
+    delete weather_widget;
+    delete wifi_widget;
+    delete clock_widget;
+}
 
 lv_display_t *Display::initialize_lvgl_display()
 {
