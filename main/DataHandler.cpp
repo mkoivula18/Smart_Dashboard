@@ -4,7 +4,6 @@
 DataHandler::DataHandler()
 {
     printf("Datahandler here!\n");
-    // update_current_temperature();
 }
 
 void DataHandler::sync_time_with_ntp()
@@ -34,10 +33,16 @@ void DataHandler::sync_time_with_ntp()
 void DataHandler::update_current_temperature()
 {
     std::string new_temperature = weather_station.get_temperature_xml();
+
+    if (new_temperature.empty())
+    {
+        return;
+    }
+
     if (new_temperature != current_temperature)
     {
         set_current_temperature(new_temperature);
-        set_new_data_available(true);
+        set_weather_data_available(true);
     }
 }
 
@@ -61,7 +66,7 @@ void DataHandler::update_current_time()
     if (current_time != new_time)
     {
         set_current_time(new_time);
-        set_new_data_available(true);
+        set_clock_data_available(true);
     }
 }
 

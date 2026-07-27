@@ -25,6 +25,11 @@ public:
         return container_ != nullptr;
     }
 
+    lv_obj_t *get_container()
+    {
+        return container_;
+    }
+
     void add_borders_to_container()
     {
         lv_obj_set_style_bg_opa(container_, LV_OPA_TRANSP, 0);

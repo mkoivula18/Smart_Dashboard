@@ -97,12 +97,18 @@ void Display::set_sanity_screen_markings()
 
 void Display::flush_callback(lv_display_t *display, const lv_area_t *area, unsigned char *px_map)
 {
-    printf("Inside callback function!\n");
+    printf("Updating screen..\n");
     // epd.DisplayFrameBuffer(framebuffer, (size_t)FRAME_BUFFER_SIZE_IN_BITS);
     // First 8 bytes are reserved for other data than actual pixels, move pointer 64-bits to the right
 
     Display *displayObject = (Display*)lv_display_get_user_data(display);
 
-    displayObject->epd.DisplayFrame(px_map + 8);
+    // displayObject->epd.DisplayFrame(px_map + 8);
+
+    displayObject->epd.DisplayFramePartial(px_map + 8, area->x1, area->y1, area->x2, area->y2, px_map);
     lv_display_flush_ready(display);
+
+    // printf("px_map: 0x%p\n", (void*)px_map);
+    printf("area: (%ld, %ld), (%ld, %ld)", area->x1, area->y1, area->x2, area->y2);
+
 }

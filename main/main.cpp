@@ -20,6 +20,7 @@ void print_esp32_info();
 
 extern "C" void app_main(void)
 {
+    // esp_log_level_set("*", ESP_LOG_WARN);
     print_esp32_info();
 
     Display display(framebuffer);
@@ -27,25 +28,38 @@ extern "C" void app_main(void)
 
     bool wifi_connected = wifi_helper.connect_to_wifi(WIFI_SSID, WIFI_PASSWORD);
     std::string wifi_status_text = (wifi_connected) ? "Connected" : "Not connected";
-    display.set_wifi_status(wifi_status_text.c_str());
+    display.update_wifi(wifi_status_text.c_str());
 
     DataHandler data_handler;
     data_handler.sync_time_with_ntp();
+    DataAvailable *data_available = data_handler.get_data_available();
 
     // display.set_sanity_screen_markings();
-    data_handler.update_current_time();
-
     while(true)
     {
         data_handler.update_current_temperature();
-        // data_handler.update_current_time();
+        data_handler.update_current_time();
 
         if (data_handler.new_data_available())
         {
-            display.update_clock(data_handler.get_current_time().c_str());
-            display.set_temperature_number(data_handler.get_current_temperature().c_str());
-            data_handler.set_new_data_available(false);
+            if (data_available->clock)
+            {
+                display.update_clock(data_handler.get_current_time().c_str());
+            }
+            if (data_available->weather)
+            {
+                display.update_weather(data_handler.get_current_temperature().c_str());
+            }
+            if (data_available->wifi)
+            {
+                std::string test_string = "Test";
+                display.update_wifi(test_string.c_str());
+            }
+
+            data_handler.clear_data_available();
         }
+
+        data_handler.clear_data_available();
 
         lv_timer_handler();
         vTaskDelay(pdMS_TO_TICKS(1000));

@@ -29,20 +29,39 @@ class Display
         void set_sanity_screen_markings();
         void set_test_screen_figures();
 
-        void set_wifi_status(const char* status_message)
+        void update_wifi(const char* status_message)
         {
             wifi_widget->set_status(status_message);
         }
 
-        void set_temperature_number(const char* value)
+        void update_weather(const char* value)
         {
             weather_widget->set_value(value);
+            refresh_widget(weather_widget);
         }
 
         void update_clock(const char* time)
         {
             clock_widget->set_time(time);
+            refresh_widget(clock_widget);
         }
+
+        void refresh_widget(Widget *widget)
+        {
+            lv_obj_t *container = widget->get_container();
+            lv_area_t area;
+            lv_obj_get_coords(container, &area);
+            printf("Object coordinates: (%ld, %ld), (%ld, %ld)\n", area.x1, area.y1, area.x2, area.y2);
+
+            // refresh_area(area);
+
+            lv_obj_invalidate(container);
+        }
+
+        // void refresh_area(lv_area_t& area)
+        // {
+        //     printf("Area refreshing implementation TODO..\n");
+        // }
 
         lv_display_t *initialize_lvgl_display();
 

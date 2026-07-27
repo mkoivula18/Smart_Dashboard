@@ -47,6 +47,7 @@ public:
     void Reset(void);
     void SetLut(void);
     void DisplayFrame(const unsigned char* frame_buffer);
+    void DisplayFramePartial(const unsigned char* frame_buffer, uint64_t x1, uint64_t y1, uint64_t x2, uint64_t y2, unsigned char *px_map) {
     void DisplayFrameBuffer(unsigned char* frame_buffer, size_t len);
     void SendCommand(unsigned char command);
     void SendData(unsigned char data);

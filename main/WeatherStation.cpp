@@ -24,6 +24,12 @@ std::string WeatherStation::get_temperature_xml()
     ESP_LOGI(TAG, "XML length: %d", xml.size());
     // ESP_LOGI(TAG, "%s", xml.c_str());
 
+    if (xml.empty())
+    {
+        ESP_LOGW(TAG, "No XML received, skipping parse");
+        return "";
+    }
+
     ParserState parser_state{}; 
 
     XML_Parser parser = XML_ParserCreate(nullptr);
@@ -38,6 +44,13 @@ std::string WeatherStation::get_temperature_xml()
         ESP_LOGE(TAG, "XML parse error: %s",
                  XML_ErrorString(XML_GetErrorCode(parser)));
 
+        XML_ParserFree(parser);
+        return "";
+    }
+
+    if (parser_state.latest_temperature.empty())
+    {
+        ESP_LOGW(TAG, "XML parsed but no temperature value was found");
         XML_ParserFree(parser);
         return "";
     }

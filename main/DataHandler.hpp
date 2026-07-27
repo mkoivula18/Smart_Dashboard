@@ -7,6 +7,17 @@
 
 #include "WeatherStation.hpp"
 
+struct DataAvailable
+{
+    bool clock      = false;
+    bool weather    = false;
+    bool wifi       = false;
+
+    bool any_data_available() const
+    {
+        return clock || weather || wifi;
+    }
+};
 
 class DataHandler
 {
@@ -28,14 +39,37 @@ public:
     void set_current_time(const std::string& time);
     const std::string& get_current_time() const;
 
-    bool new_data_available()
+    void clear_data_available()
     {
-        return data_available;
+        data_available = {};
     }
 
-    void set_new_data_available(bool set)
+    bool new_data_available()
     {
-        data_available = set;
+        return data_available.any_data_available();
+    }
+
+    void set_weather_data_available(bool value)
+    {
+        printf("New weather data available\n");
+        data_available.weather = value;
+    }
+
+    void set_clock_data_available(bool value)
+    {
+        printf("New clock data available\n");
+        data_available.clock = value;
+    }
+
+    void set_wifi_data_available(bool value)
+    {
+        printf("New wifi data available\n");
+        data_available.wifi = value;
+    }
+
+    DataAvailable *get_data_available()
+    {
+        return &data_available;
     }
 
 private:
@@ -44,5 +78,6 @@ private:
     std::string current_temperature{};
     std::string current_date{};
     std::string current_time{};
-    bool data_available;
+    DataAvailable data_available{};
+
 };

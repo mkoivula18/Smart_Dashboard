@@ -211,13 +211,13 @@ void Epd::SendDataBuffer(unsigned char *buffer, size_t len)
  */
 void Epd::WaitUntilIdle(void) {
     unsigned char busy;
-    printf("e-Paper Busy\r\n ");
+    // printf("e-Paper Busy\r\n ");
     do {
         SendCommand(0x71);
         busy = DigitalRead(busy_pin);
         DelayMs(20);
     } while(busy == 0);
-    printf("e-Paper Busy Release\r\n ");
+    // printf("e-Paper Busy Release\r\n ");
     DelayMs(20);
 }
 
@@ -246,6 +246,16 @@ void Epd::DisplayFrame(const unsigned char* frame_buffer) {
     SendCommand(0x12);
     DelayMs(100);
     WaitUntilIdle();
+}
+
+void Epd::DisplayFramePartial(const unsigned char* frame_buffer, uint64_t x1, uint64_t y1, uint64_t x2, uint64_t y2, unsigned char *px_map) {
+
+    uint64_t partial_width  = x2 - x1 + 1;
+    uint64_t partial_height = y2 - y1 + 1;
+
+    uint64_t x1_aligned      = x1 - (x1 % 8);
+    uint64_t x2_aligned      = x2 + (8 - x2 % 8 - 1)
+    uint64_t width_in_bytes  =  (x2_aligned - x1_aligned + 1) / 8;
 }
 
 void Epd::DisplayFrameBuffer(unsigned char* frame_buffer, size_t len) {
