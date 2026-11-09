@@ -184,6 +184,25 @@ int Epd::Init(void) {
     return 0;
 }
 
+int Epd::EPD_7IN5_V2_Init_Part(void)
+{
+    Reset();
+
+    SendCommand(0X00);      //PANNEL SETTING
+    SendData(0x1F);         //KW-3f   KWR-2F	BWROTP 0f	BWOTP 1f
+
+    SendCommand(0x04);      //POWER ON
+    DelayMs(100); 
+    WaitUntilIdle();        //Waiting for the electronic paper IC to release the idle signal
+
+    SendCommand(0xE0);
+    SendData(0x02);
+    SendCommand(0xE5);
+    SendData(0x6E);
+
+    return 0;
+}
+
 /**
  *  @brief: basic function for sending commands
  */
@@ -254,8 +273,42 @@ void Epd::DisplayFramePartial(const unsigned char* frame_buffer, uint64_t x1, ui
     uint64_t partial_height = y2 - y1 + 1;
 
     uint64_t x1_aligned      = x1 - (x1 % 8);
-    uint64_t x2_aligned      = x2 + (8 - x2 % 8 - 1)
+    uint64_t x2_aligned      = x2 + (8 - x2 % 8 - 1);
     uint64_t width_in_bytes  =  (x2_aligned - x1_aligned + 1) / 8;
+
+    SendCommand(0x50);
+    SendData(0xA9);
+    SendData(0x07);
+
+    SendCommand(0x91);		//This command makes the display enter partial mode
+    SendCommand(0x90);		//resolution setting
+
+    SendData (x1/256);
+    SendData (x1%256);   //x-start    
+
+    SendData (x2/256);		
+    SendData (x2%256-1);  //x-end	
+
+    SendData (y1/256);  //
+    SendData (y1%256);   //y-start    
+
+    SendData (y2/256);		
+    SendData (y2%256-1);  //y-end
+
+    SendData (0x01);
+    SendCommand(0x13);
+
+    for (unsigned long j = 0; j < partial_height; j++)
+    {
+        for (unsigned long i = 0; i < partial_width/8; i++)
+        {
+            SendData(~frame_buffer[i + j * partial_width/8]);
+        }
+    }
+
+    SendCommand(0x12);
+    DelayMs(100);
+    WaitUntilIdle();
 }
 
 void Epd::DisplayFrameBuffer(unsigned char* frame_buffer, size_t len) {

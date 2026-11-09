@@ -9,6 +9,9 @@ Display::Display(unsigned char *buffer) : framebuffer(buffer)
 {
     int ret = epd.Init();
     printf("Epd Init %s\n", (ret ? "failed" : "successful!"));
+    
+    int partial_init = epd.EPD_7IN5_V2_Init_Part();
+    printf("Epd Partial Init %s\n", (partial_init ? "failed" : "successful!"));
 
     lv_init();
     initialize_lvgl_display();
@@ -103,9 +106,9 @@ void Display::flush_callback(lv_display_t *display, const lv_area_t *area, unsig
 
     Display *displayObject = (Display*)lv_display_get_user_data(display);
 
-    // displayObject->epd.DisplayFrame(px_map + 8);
+    displayObject->epd.DisplayFrame(px_map + 8);
 
-    displayObject->epd.DisplayFramePartial(px_map + 8, area->x1, area->y1, area->x2, area->y2, px_map);
+    // displayObject->epd.DisplayFramePartial(px_map + 8, area->x1, area->y1, area->x2, area->y2, px_map);
     lv_display_flush_ready(display);
 
     // printf("px_map: 0x%p\n", (void*)px_map);
