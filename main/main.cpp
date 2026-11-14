@@ -14,7 +14,8 @@
 
 
 // Initialize buffer with zeros
-unsigned char framebuffer[FRAME_BUFFER_SIZE_IN_BYTES*2] {};
+// LVGL stores its I1 palette immediately before the pixel data.
+unsigned char framebuffer[FRAME_BUFFER_SIZE_IN_BYTES * 2 + Display::LVGL_I1_PALETTE_BYTES] {};
 
 void print_esp32_info();
 
@@ -61,7 +62,7 @@ extern "C" void app_main(void)
 
         data_handler.clear_data_available();
 
-        lv_timer_handler();
+        display.process_lvgl();
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }

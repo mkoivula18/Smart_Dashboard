@@ -28,6 +28,7 @@
 #define EPD7IN5_V2_H
 
 #include "epdif.hpp"
+#include "lvgl.h"
 
 // Display resolution
 #define EPD_WIDTH       800
@@ -43,12 +44,20 @@ public:
     Epd();
     ~Epd();
     int Init(void);
+    int InitFullUpdate(void);
     int EPD_7IN5_V2_Init_Part(void);
     void WaitUntilIdle(void);
     void Reset(void);
     void SetLut(void);
     void DisplayFrame(const unsigned char* frame_buffer);
-    void DisplayFramePartial(const unsigned char* frame_buffer, uint64_t x1, uint64_t y1, uint64_t x2, uint64_t y2, unsigned char *px_map);
+
+    // A partial update can contain several LVGL flushes. Start the controller
+    // once, write every rendered region, and refresh the visible panel once.
+    bool BeginPartialUpdate();
+    bool IsValidPartialArea(const lv_area_t &area) const;
+    bool WriteRegion(const lv_area_t &area, const uint8_t *pixels);
+    void EndPartialUpdate();
+
     void DisplayFrameBuffer(unsigned char* frame_buffer, size_t len);
     void SendCommand(unsigned char command);
     void SendData(unsigned char data);
@@ -68,6 +77,8 @@ private:
     unsigned long widthInBytes;
     unsigned long height;
     unsigned long heightInBytes;
+    bool partial_mode_initialized = false;
+    bool partial_update_active = false;
 
 	void SetLut(unsigned char *lut);
     void SetLut_by_host(unsigned char *lut_vcom, unsigned char *lut_ww, unsigned char *lut_bw, unsigned char *lut_wb, unsigned char *lut_bb);

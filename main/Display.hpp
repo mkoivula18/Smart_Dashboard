@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <string>
+#include <cstddef>
 
 #include "epd7in5_V2.hpp"
 #include "esp_flash.h"
@@ -19,55 +20,44 @@
 class Display
 {
     public:
+        static constexpr size_t LVGL_I1_PALETTE_BYTES =
+            LV_COLOR_INDEXED_PALETTE_SIZE(LV_COLOR_FORMAT_I1) * sizeof(lv_color32_t);
+
         Display(unsigned char *buffer);
         ~Display();
 
         static void flush_callback(lv_display_t *display, const lv_area_t *area, unsigned char *px_map);
+        static void expand_partial_refresh_area(lv_event_t *event);
         static uint32_t get_esp_time_cb(void);
 
 
         void set_sanity_screen_markings();
         void set_test_screen_figures();
 
-        void update_wifi(const char* status_message)
-        {
-            wifi_widget->set_status(status_message);
-        }
+        bool is_ready() const;
+        void process_lvgl();
+        void update_wifi(const char* status_message);
+        void update_weather(const char* value);
+        void update_clock(const char* time);
+        void refresh_widget(Widget *widget);
 
-        void update_weather(const char* value)
-        {
-            weather_widget->set_value(value);
-            refresh_widget(weather_widget);
-        }
-
-        void update_clock(const char* time)
-        {
-            clock_widget->set_time(time);
-            refresh_widget(clock_widget);
-        }
-
-        void refresh_widget(Widget *widget)
-        {
-            lv_obj_t *container = widget->get_container();
-            lv_area_t area;
-            lv_obj_get_coords(container, &area);
-            printf("Object coordinates: (%ld, %ld), (%ld, %ld)\n", area.x1, area.y1, area.x2, area.y2);
-
-            // refresh_area(area);
-
-            lv_obj_invalidate(container);
-        }
-
-        // void refresh_area(lv_area_t& area)
-        // {
-        //     printf("Area refreshing implementation TODO..\n");
-        // }
+        void refresh_full();
 
         lv_display_t *initialize_lvgl_display();
 
     private:
         Epd epd;
         uint8_t *framebuffer;
+        lv_display_t *lvgl_display = nullptr;
+        uint32_t partial_refresh_count = 0;
+        bool full_refresh_due = false;
+        bool partial_cycle_has_region = false;
+        bool partial_cycle_failed = false;
+        bool display_ready = false;
+
+        static constexpr uint32_t FULL_REFRESH_AFTER_PARTIAL_UPDATES = 20;
+        static constexpr lv_coord_t PARTIAL_REFRESH_X1 = 0;
+        static constexpr lv_coord_t PARTIAL_REFRESH_X2 = EPD_WIDTH - 1;
 
         lv_obj_t *temperature_number;
 

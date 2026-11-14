@@ -13,6 +13,8 @@ void ClockWidget::create(lv_obj_t *parent, const char *time_text)
     // Example: create labels, set fonts, set size, and apply styles.
 
     lv_obj_set_size(container_, SCREEN_SIZE_WIDTH, SCREEN_SIZE_HEIGHT / 4);
+    set_partial_refresh_background();
+    lv_obj_set_style_pad_all(container_, 0, 0);
 
     value_label_ = lv_label_create(container_);
     lv_label_set_text(value_label_, time_text);

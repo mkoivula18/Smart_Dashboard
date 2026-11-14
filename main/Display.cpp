@@ -9,6 +9,10 @@ Display::Display(unsigned char *buffer) : framebuffer(buffer)
 {
     int ret = epd.Init();
     printf("Epd Init %s\n", (ret ? "failed" : "successful!"));
+    if (ret != 0) {
+        printf("Display disabled: e-paper initialization failed\n");
+        return;
+    }
     
     // int partial_init = epd.EPD_7IN5_V2_Init_Part();
     // printf("Epd Partial Init %s\n", (partial_init ? "failed" : "successful!"));
@@ -30,6 +34,10 @@ Display::Display(unsigned char *buffer) : framebuffer(buffer)
     lv_obj_set_flex_flow(main_screen, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_style_pad_row(main_screen, 8, 0);
 
+    // Draw a known-good full image before switching LVGL to area-local buffers.
+    display_ready = true;
+    refresh_full();
+
 }
 
 Display::~Display()
@@ -43,11 +51,25 @@ lv_display_t *Display::initialize_lvgl_display()
 {
     lv_tick_set_cb(get_esp_time_cb);
     
-    lv_display_t *display = lv_display_create(EPD_WIDTH, EPD_HEIGHT);
-    lv_display_set_color_format(display, LV_COLOR_FORMAT_I1);
-    lv_display_set_flush_cb(display, flush_callback);
-    lv_display_set_buffers(display, framebuffer, NULL, FRAME_BUFFER_SIZE_IN_BYTES + 8, LV_DISPLAY_RENDER_MODE_FULL);
-    lv_display_set_user_data(display, this);
+    lvgl_display = lv_display_create(EPD_WIDTH, EPD_HEIGHT);
+    lv_display_set_color_format(lvgl_display, LV_COLOR_FORMAT_I1);
+    lv_display_set_flush_cb(lvgl_display, flush_callback);
+
+    // This panel's partial-window controller is unreliable when a window starts
+    // at a non-zero X coordinate.  Expanding invalidations here makes LVGL
+    // render a complete horizontal band, so the flush buffer really contains
+    // pixels for x = 0..799 (rather than expanding the area later in the EPD
+    // driver, where those pixels would not exist).
+    lv_display_add_event_cb(lvgl_display, expand_partial_refresh_area,
+                            LV_EVENT_INVALIDATE_AREA, nullptr);
+
+    // Keep the screen-sized buffer for the first implementation. LVGL still
+    // renders only invalidated areas, while the larger buffer avoids splitting
+    // a normal widget update into several row-sized flushes.
+    lv_display_set_buffers(lvgl_display, framebuffer, NULL,
+                           FRAME_BUFFER_SIZE_IN_BYTES + LVGL_I1_PALETTE_BYTES,
+                           LV_DISPLAY_RENDER_MODE_FULL);
+    lv_display_set_user_data(lvgl_display, this);
 
     main_screen = lv_obj_create(lv_screen_active());
     lv_obj_set_size(main_screen, SCREEN_SIZE_WIDTH, SCREEN_SIZE_HEIGHT);
@@ -57,12 +79,118 @@ lv_display_t *Display::initialize_lvgl_display()
     lv_obj_set_style_border_width(main_screen, 0, 0);
     lv_obj_set_style_pad_all(main_screen, 0, 0);
 
-    return display;
+    return lvgl_display;
+}
+
+void Display::refresh_full()
+{
+    if (!display_ready || lvgl_display == nullptr) {
+        return;
+    }
+
+    // A full update must use the panel's full-refresh initialization. It also
+    // resets any partial-mode controller state that could affect contrast.
+    // Do not call Epd::Init() here: it also initializes the SPI bus.
+    const int full_init = epd.InitFullUpdate();
+    if (full_init != 0) {
+        printf("Epd full-refresh init failed\n");
+        return;
+    }
+    partial_refresh_count = 0;
+    full_refresh_due = false;
+
+    lv_display_set_render_mode(lvgl_display, LV_DISPLAY_RENDER_MODE_FULL);
+    lv_obj_invalidate(lv_screen_active());
+    lv_refr_now(lvgl_display);
+    lv_display_set_render_mode(lvgl_display, LV_DISPLAY_RENDER_MODE_PARTIAL);
+}
+
+bool Display::is_ready() const
+{
+    return display_ready;
+}
+
+void Display::process_lvgl()
+{
+    if (display_ready) {
+        lv_timer_handler();
+    }
+}
+
+void Display::update_wifi(const char *status_message)
+{
+    if (!display_ready || wifi_widget == nullptr) {
+        return;
+    }
+
+    lv_display_enable_invalidation(lvgl_display, false);
+    wifi_widget->set_status(status_message);
+    lv_display_enable_invalidation(lvgl_display, true);
+    refresh_widget(wifi_widget);
+}
+
+void Display::update_weather(const char *value)
+{
+    if (!display_ready || weather_widget == nullptr) {
+        return;
+    }
+
+    lv_display_enable_invalidation(lvgl_display, false);
+    weather_widget->set_value(value);
+    lv_display_enable_invalidation(lvgl_display, true);
+    refresh_widget(weather_widget);
+}
+
+void Display::update_clock(const char *time)
+{
+    if (!display_ready || clock_widget == nullptr) {
+        return;
+    }
+
+    lv_display_enable_invalidation(lvgl_display, false);
+    clock_widget->set_time(time);
+    lv_display_enable_invalidation(lvgl_display, true);
+    refresh_widget(clock_widget);
+}
+
+void Display::refresh_widget(Widget *widget)
+{
+    if (!display_ready || widget == nullptr) {
+        return;
+    }
+
+    lv_obj_t *container = widget->get_container();
+    if (container == nullptr) {
+        return;
+    }
+
+    if (full_refresh_due) {
+        // Refresh on the next content change instead of interrupting a partial
+        // flush cycle from inside the LVGL callback.
+        refresh_full();
+        return;
+    }
+
+    lv_obj_update_layout(container);
+    lv_obj_invalidate(container);
 }
 
 uint32_t Display::get_esp_time_cb()
 {
     return (uint32_t)(esp_timer_get_time() / 1000ULL);
+}
+
+void Display::expand_partial_refresh_area(lv_event_t *event)
+{
+    lv_area_t *area = lv_event_get_invalidated_area(event);
+    if (area == nullptr) {
+        return;
+    }
+
+    // Keep the dirty rows, but always redraw the whole horizontal band. This
+    // also gives opaque widget containers a chance to overwrite old glyphs.
+    area->x1 = PARTIAL_REFRESH_X1;
+    area->x2 = PARTIAL_REFRESH_X2;
 }
 
 void Display::set_test_screen_figures()
@@ -100,18 +228,48 @@ void Display::set_sanity_screen_markings()
 
 void Display::flush_callback(lv_display_t *display, const lv_area_t *area, unsigned char *px_map)
 {
-    printf("Updating screen..\n");
-    // epd.DisplayFrameBuffer(framebuffer, (size_t)FRAME_BUFFER_SIZE_IN_BITS);
-    // First 8 bytes are reserved for other data than actual pixels, move pointer 64-bits to the right
+    Display *displayObject = static_cast<Display *>(lv_display_get_user_data(display));
+    const uint8_t *pixels = px_map + LVGL_I1_PALETTE_BYTES;
 
-    Display *displayObject = (Display*)lv_display_get_user_data(display);
+    if (lv_display_get_render_mode(display) == LV_DISPLAY_RENDER_MODE_FULL) {
+        // Full mode always supplies the complete framebuffer.
+        displayObject->epd.DisplayFrame(pixels);
+        lv_display_flush_ready(display);
+        return;
+    }
 
-    displayObject->epd.DisplayFrame(px_map + 8);
+    // Validate before opening a controller transaction. A failed area is
+    // recovered by a full refresh on the next content update.
+    bool wrote_region = false;
+    if (!displayObject->epd.IsValidPartialArea(*area)) {
+        printf("Skipping invalid LVGL partial area\n");
+        displayObject->partial_cycle_failed = true;
+    }
+    else {
+        // A logical LVGL refresh can contain multiple flushes. Upload every
+        // region first and make the panel visible only after the last one.
+        const bool began = displayObject->epd.BeginPartialUpdate();
+        wrote_region = began && displayObject->epd.WriteRegion(*area, pixels);
+        displayObject->partial_cycle_failed |= !wrote_region;
+    }
+    displayObject->partial_cycle_has_region |= wrote_region;
 
-    // displayObject->epd.DisplayFramePartial(px_map + 8, area->x1, area->y1, area->x2, area->y2, px_map);
+    if (lv_display_flush_is_last(display)) {
+        if (displayObject->partial_cycle_has_region) {
+            displayObject->epd.EndPartialUpdate();
+        }
+
+        if (displayObject->partial_cycle_failed) {
+            displayObject->full_refresh_due = true;
+        }
+        else if (displayObject->partial_cycle_has_region) {
+            ++displayObject->partial_refresh_count;
+            displayObject->full_refresh_due =
+                displayObject->partial_refresh_count >= FULL_REFRESH_AFTER_PARTIAL_UPDATES;
+        }
+        displayObject->partial_cycle_has_region = false;
+        displayObject->partial_cycle_failed = false;
+    }
+
     lv_display_flush_ready(display);
-
-    // printf("px_map: 0x%p\n", (void*)px_map);
-    printf("area: (%ld, %ld), (%ld, %ld)", area->x1, area->y1, area->x2, area->y2);
-
 }

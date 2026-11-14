@@ -28,6 +28,11 @@
 #include <stdio.h>
 #include "epd7in5_V2.hpp"
 
+// WriteRegion receives LVGL's area-local I1 buffer. A different LVGL stride
+// would require that stride to be passed through the flush API explicitly.
+static_assert(LV_DRAW_BUF_STRIDE_ALIGN == 1,
+              "Partial refresh currently requires a packed LVGL I1 buffer");
+
 unsigned char Voltage_Frame_7IN5_V2[]={
 	0x6, 0x3F, 0x3F, 0x11, 0x24, 0x7, 0x17,
 };
@@ -100,6 +105,13 @@ int Epd::Init(void) {
     if (IfInit() != 0) {
         return -1;
     }
+
+    return InitFullUpdate();
+}
+
+int Epd::InitFullUpdate(void) {
+    // SPI is initialized once by Init(). Full-refresh recovery needs to reset
+    // only the panel controller, otherwise spi_bus_initialize() fails.
     Reset();
 
     // SendCommand(0x01); 
@@ -181,6 +193,11 @@ int Epd::Init(void) {
 
     SetLut_by_host(LUT_VCOM_7IN5_V2, LUT_WW_7IN5_V2, LUT_BW_7IN5_V2, LUT_WB_7IN5_V2, LUT_BB_7IN5_V2);
 
+    // Init configures the controller for the known-good full-refresh path.
+    // A future partial update must explicitly configure its own controller mode.
+    partial_mode_initialized = false;
+    partial_update_active = false;
+
     return 0;
 }
 
@@ -255,7 +272,8 @@ void Epd::Reset(void) {
 }
 
 void Epd::DisplayFrame(const unsigned char* frame_buffer) {
-    
+    // Keep the established full-refresh transfer protocol independent from
+    // the panel-specific partial-refresh path below.
     SendCommand(0x13);
     for (unsigned long j = 0; j < height; j++) {
         for (unsigned long i = 0; i < width/8; i++) {
@@ -267,48 +285,104 @@ void Epd::DisplayFrame(const unsigned char* frame_buffer) {
     WaitUntilIdle();
 }
 
-void Epd::DisplayFramePartial(const unsigned char* frame_buffer, uint64_t x1, uint64_t y1, uint64_t x2, uint64_t y2, unsigned char *px_map) {
+bool Epd::BeginPartialUpdate()
+{
+    if (partial_update_active) {
+        return true;
+    }
 
-    uint64_t partial_width  = x2 - x1 + 1;
-    uint64_t partial_height = y2 - y1 + 1;
-
-    uint64_t x1_aligned      = x1 - (x1 % 8);
-    uint64_t x2_aligned      = x2 + (8 - x2 % 8 - 1);
-    uint64_t width_in_bytes  =  (x2_aligned - x1_aligned + 1) / 8;
+    // Do not mix the full-refresh controller state with partial writes. The
+    // previous implementation did that and produced visibly grainy output.
+    if (!partial_mode_initialized) {
+        if (EPD_7IN5_V2_Init_Part() != 0) {
+            return false;
+        }
+        partial_mode_initialized = true;
+    }
 
     SendCommand(0x50);
     SendData(0xA9);
     SendData(0x07);
+    SendCommand(0x91);  // Enter partial-update mode.
 
-    SendCommand(0x91);		//This command makes the display enter partial mode
-    SendCommand(0x90);		//resolution setting
+    partial_update_active = true;
+    return true;
+}
 
-    SendData (x1/256);
-    SendData (x1%256);   //x-start    
+bool Epd::IsValidPartialArea(const lv_area_t &area) const
+{
+    const int32_t region_width = area.x2 - area.x1 + 1;
+    const int32_t region_height = area.y2 - area.y1 + 1;
+    const bool is_inside_panel = area.x1 >= 0 && area.y1 >= 0 &&
+                                 area.x2 < static_cast<int32_t>(width) &&
+                                 area.y2 < static_cast<int32_t>(height);
+    const bool is_byte_aligned = (area.x1 % 8 == 0) && (region_width % 8 == 0);
 
-    SendData (x2/256);		
-    SendData (x2%256-1);  //x-end	
+    return region_width > 0 && region_height > 0 && is_inside_panel && is_byte_aligned;
+}
 
-    SendData (y1/256);  //
-    SendData (y1%256);   //y-start    
+bool Epd::WriteRegion(const lv_area_t &area, const uint8_t *pixels)
+{
+    if (!partial_update_active || pixels == nullptr) {
+        return false;
+    }
 
-    SendData (y2/256);		
-    SendData (y2%256-1);  //y-end
+    // LVGL I1 partial rendering supplies an area-local buffer. It must already
+    // be byte aligned: expanding the rectangle here would require pixels that
+    // are not present in that buffer.
+    if (!IsValidPartialArea(area)) {
+        printf("Invalid partial area: (%ld, %ld)-(%ld, %ld)\n",
+               static_cast<long>(area.x1), static_cast<long>(area.y1),
+               static_cast<long>(area.x2), static_cast<long>(area.y2));
+        return false;
+    }
 
-    SendData (0x01);
+    const int32_t region_width = area.x2 - area.x1 + 1;
+    const int32_t region_height = area.y2 - area.y1 + 1;
+
+    const uint16_t x_start = static_cast<uint16_t>(area.x1);
+    const uint16_t x_end = static_cast<uint16_t>(area.x2);
+    const uint16_t y_start = static_cast<uint16_t>(area.y1);
+    const uint16_t y_end = static_cast<uint16_t>(area.y2);
+    const size_t bytes_per_row = static_cast<size_t>(region_width / 8);
+
+    // The controller window uses inclusive coordinates, matching lv_area_t.
+    SendCommand(0x90);
+    SendData(x_start >> 8);
+    SendData(x_start & 0xFF);
+    SendData(x_end >> 8);
+    SendData(x_end & 0xFF);
+    SendData(y_start >> 8);
+    SendData(y_start & 0xFF);
+    SendData(y_end >> 8);
+    SendData(y_end & 0xFF);
+    SendData(0x01);
+
+    // In partial mode this controller expects the direct LVGL I1 bits here.
+    // Unlike the full-refresh path, do not invert them and do not write DTM1.
+    // This matches Waveshare's EPD_7IN5_V2_Display_Part implementation.
     SendCommand(0x13);
-
-    for (unsigned long j = 0; j < partial_height; j++)
-    {
-        for (unsigned long i = 0; i < partial_width/8; i++)
-        {
-            SendData(~frame_buffer[i + j * partial_width/8]);
+    for (int32_t row = 0; row < region_height; ++row) {
+        const uint8_t *row_pixels = pixels + (static_cast<size_t>(row) * bytes_per_row);
+        for (size_t byte = 0; byte < bytes_per_row; ++byte) {
+            SendData(row_pixels[byte]);
         }
     }
 
+    return true;
+}
+
+void Epd::EndPartialUpdate()
+{
+    if (!partial_update_active) {
+        return;
+    }
+
+    // Trigger one visible refresh after all LVGL flush regions are in RAM.
     SendCommand(0x12);
     DelayMs(100);
     WaitUntilIdle();
+    partial_update_active = false;
 }
 
 void Epd::DisplayFrameBuffer(unsigned char* frame_buffer, size_t len) {

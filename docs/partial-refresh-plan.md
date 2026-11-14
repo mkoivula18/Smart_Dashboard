@@ -1,66 +1,76 @@
-# Osapäivitykset widget-/container-tasolla e-paperinäytölle
+# Partial Refresh Architecture
 
-## Yhteenveto
-Nykyinen vilkkuminen johtuu siitä, että LVGL renderöi `FULL`-tilassa ja `flush_callback` lähettää koko framebufferin paneelille jokaisessa päivityksessä. Toteutus muutetaan niin, että näyttö tukee osapäivitystä suorakulmioalueelle, mutta sovelluksen julkinen käyttöliittymä on objektipohjainen: voit pyytää päivityksen suoraan widgetille/containerille, ja taustalla järjestelmä laskee siitä pikselialueen ja lähettää vain sen alueen paneelille.
+## Status
 
-Hybridimalli otetaan käyttöön haamukuvien hallintaan: nopeat pienet muutokset, kuten kello, tehdään osapäivityksenä, mutta järjestelmä tekee ajoittain koko ruudun refreshin esimerkiksi tietyn osapäivitysmäärän jälkeen tai eksplisiittisesti, kun koko layout muuttuu.
+Implemented and manually validated on the Waveshare 7.5-inch V2 panel. Automated protocol tests remain future work.
 
-## Keskeiset muutokset
-- Muuta LVGL-display `FULL`-renderöinnistä `PARTIAL`-renderöintiin.
-  - `lv_display_set_buffers(..., LV_DISPLAY_RENDER_MODE_PARTIAL)` käyttöön.
-  - Käytä draw-bufferia, joka on pienempi kuin koko näyttö ja riittää aluekohtaiseen flushiin.
-  - `flush_callback` alkaa käyttää `area`-parametria oikeasti eikä lähetä koko framea.
+## Refresh policy
 
-- Lisää EPD-ajuriin oikea aluepäivitys-API.
-  - Uusi rajapinta tyyliin `DisplayRegion(const uint8_t* px_map, const lv_area_t& area)` tai vastaava rect-pohjainen metodi.
-  - Ajuri vastaa alueen klippauksesta paneelin rajoihin.
-  - X-koordinaatit kohdistetaan byte-rajoihin, koska 1-bpp data siirtyy 8 pikselin paloissa.
-  - Lähetyslogiikka rajataan vain alueen riveihin ja byteihin; `~bit`-invertointi tehdään vain lähetettävälle osalle.
-  - Vanha full refresh säilytetään erillisenä polkuna koko näytön päivityksiin.
+| Situation | Path |
+| --- | --- |
+| Boot, recovery, or every 20 completed partial refreshes | Full refresh |
+| Clock, weather, or Wi-Fi content change | Partial refresh |
 
-- Lisää `Display`-luokkaan objektipohjainen päivitysrajapinta.
-  - Uusi julkinen metodi tyyliin `refresh_object(lv_obj_t* obj)`.
-  - Se tekee `lv_obj_update_layout(obj)` ennen koordinaattien lukemista.
-  - Se hakee objektin koordinaatit `lv_obj_get_coords`-kutsulla, kasvattaa aluetta tarvittaessa pienellä marginaalilla ja invalidioi sen.
-  - Päivitys pakotetaan heti `lv_refr_now(display)`-kutsulla, jotta juuri haluttu alue flushataan saman tien.
-  - Haluttaessa rinnalle sisäinen `refresh_area(const lv_area_t&)`-apu, jota objektimetodi käyttää.
+`FULL_REFRESH_AFTER_PARTIAL_UPDATES` is deliberately conservative. Tune it only with repeated hardware tests for ghosting and contrast.
 
-- Lisää widgeteille siisti tapa pyytää oma päivitys.
-  - Helpoin malli: widgetin setterit vain muuttavat LVGL-objektin tekstiä, ja kutsuva koodi pyytää `Display`-tasolta kyseisen widgetin refreshausta.
-  - Tätä varten `Display` tarvitsee pääsyn widgetin juurikonttiin; `Widget`-baseen kannattaa tarjota `get_container()` tai vastaava.
-  - Kello käyttää tätä polkua minuuttipäivityksissä; suuremmat näkymämuutokset voivat edelleen käyttää full refreshia.
+## Full refresh flow
 
-- Lisää hybridirefresh-policy ghostingin hallintaan.
-  - `Display` pitää laskuria osapäivityksille.
-  - Kun osapäivityksiä on tehty yli sovitun rajan, seuraava päivitys tehdään full refreshina ja laskuri nollataan.
-  - Lisäksi tarjotaan eksplisiittinen `refresh_full()` esimerkiksi käynnistykseen, screen-vaihtoihin ja suuriin layoutmuutoksiin.
+```text
+Widget state
+  → LVGL renders the complete 800×480 I1 framebuffer
+  → Epd::DisplayFrame(old, new)
+  → controller commands 0x10, 0x13, 0x12
+  → panel finishes a full refresh
+```
 
-## Julkiset rajapinnat
-- `Display`
-  - Lisää objektipohjainen päivitysmetodi, esim. `refresh_object(lv_obj_t* obj)`.
-  - Lisää koko ruudun päivitysmetodi, esim. `refresh_full()`.
-  - Lisää mahdollinen sisäinen tai julkinen rect-pohjainen fallback, esim. `refresh_area(const lv_area_t&)`.
+`Epd::InitFullUpdate()` resets only the panel controller. SPI is initialized once by `Epd::Init()`, so full-refresh recovery must not call `Epd::Init()` again.
 
-- `Widget`
-  - Lisää tapa palauttaa widgetin juurikontti, esim. `lv_obj_t* get_container() const`.
-  - Tätä käytetään, jotta `Display` voi päivittää juuri kyseisen widgetin alueen.
+## Partial refresh flow
 
-- EPD-ajuri
-  - Lisää aluekohtainen renderöintimetodi, joka ottaa alueen koordinaatit ja LVGL:n toimittaman pikselidatan.
-  - Säilytä nykyinen full-frame-metodi erillisenä.
+```text
+Display::update_clock/weather/wifi
+  → temporarily suppress the label's automatic invalidation
+  → update widget content
+  → invalidate the widget root
+  → LVGL expands x to 0..799 and renders the dirty rows
+  → flush_callback sends the area-local I1 pixels to Epd::WriteRegion()
+  → after the final LVGL flush, Epd::EndPartialUpdate() sends 0x12
+```
 
-## Testit ja hyväksymiskriteerit
-- Kellon tekstin vaihto päivittää vain kellowidgetin alueen eikä aiheuta koko näytön vilkkumista.
-- WiFi-statuksen tekstin vaihto päivittää vain WiFi-widgetin alueen.
-- Sää-widgetin numeron vaihto päivittää vain sääalueen, myös silloin kun tekstin leveys muuttuu.
-- Osapäivitys toimii oikein myös silloin, kun objektin leveys ei osu 8 pikselin byte-rajaan.
-- Alue näytetään oikein ruudun reunoilla ilman ylivuotoa tai väärää klippausta.
-- Hybridimallissa full refresh laukeaa odotetusti määritellyn osapäivitysmäärän jälkeen.
-- Ensikäynnistys ja isot layoutmuutokset käyttävät edelleen full refreshia, joten alkuperäinen toimivuus ei regressioidu.
+The widget root has an opaque white background. This replaces pixels from a longer previous value when the new text is shorter.
 
-## Oletukset ja valitut oletusarvot
-- Ensisijainen käyttö-API on container-/objektipohjainen; rect-pohjainen API on tekninen apurajapinta sen alla.
-- Ghostingin hallinta tehdään hybridimallilla, ei pelkillä osapäivityksillä.
-- Full refresh pidetään käytössä käynnistyksessä ja suurissa näkymämuutoksissa.
-- Toteutuksessa ei tehdä yleistä "päivitä mikä tahansa automaattisesti ilman kutsua" -arkkitehtuuria, vaan sovelluskoodi pyytää kohdepäivityksen selvästi niissä kohdissa, joissa widgetin sisältö muuttuu.
-- Jos 7.5" Waveshare V2 -paneelin nykyinen init-sekvenssi ei yksin riitä vakaaseen true partial refreshiin, suunnitelmaan kuuluu ajurin komentosekvenssin tarkennus kyseisen paneelin partial update -moodiin ennen käyttöönottoa; tätä ei jätetä toteuttajan päätettäväksi vaan se tutkitaan ajurimuutoksen yhteydessä.
+## Panel-specific constraints
+
+- The Waveshare 7.5-inch V2 controller produced corrupt output for windows starting at a non-zero X coordinate. `expand_partial_refresh_area()` therefore forces every partial area to `x = 0..799` while preserving its Y range.
+- `LV_COLOR_FORMAT_I1` data is byte aligned by LVGL. The driver validates that the partial area starts on an 8-pixel boundary and has a byte-aligned width.
+- LVGL passes an area-local buffer, not a pointer into a full-screen framebuffer. The first `Display::LVGL_I1_PALETTE_BYTES` bytes are the I1 palette and are skipped before transfer. The build asserts packed I1 rows (`LV_DRAW_BUF_STRIDE_ALIGN == 1`) so a future stride change fails at compile time instead of scrambling pixels.
+- This controller uses different data polarity in its full and partial paths. `DisplayFrame()` writes an inverted NEW frame to `0x13`; `WriteRegion()` writes the partial I1 bytes directly to `0x13`.
+
+Do not expand a partial rectangle in `Epd::WriteRegion()`: the extra pixels would not exist in LVGL's local buffer. Expand it through the LVGL invalidation event before rendering instead.
+
+## Ownership
+
+| Layer | Responsibility |
+| --- | --- |
+| Widget | Owns content and an opaque root background. |
+| Display | Selects full versus partial refresh, invalidates roots, and counts partial refreshes. |
+| LVGL | Calculates and renders dirty areas. |
+| EPD driver | Configures the panel and transfers already-rendered bytes. |
+
+## Validation checklist
+
+- `XX:XX → 12:34` removes all old glyph pixels.
+- A clock update refreshes only the clock's rows, without a full-panel flash.
+- Wi-Fi and weather updates clear longer previous text.
+- A full refresh still succeeds on boot and after 20 partial refreshes.
+- Repeated partial updates remain legible at the intended operating temperature.
+
+## Known scope
+
+The full-width X workaround applies to every partial invalidation on this display. New animated, overlay, or high-frequency UI features must be measured against this cost before being enabled.
+
+## Future work
+
+- Make the full-refresh threshold configurable.
+- Add serial diagnostics for partial areas and completed refresh counts.
+- Add a hardware regression test for text shrinking and partial-refresh ghosting.
