@@ -17,6 +17,15 @@ ESP32 + E-ink smart screen project
 - Feature 4
 - Feature 5
 
+## Future Features / Backlog
+
+### Qt E-Ink Dashboard Simulator
+
+- Enables fast UI and layout iteration on a PC without repeatedly building and flashing the ESP32.
+- Reuses the dashboard state and LVGL rendering flow so the simulator mirrors the 800×480, 1-bit e-ink output.
+- Provides editable test data for time, weather, and Nysse departures, including edge-case scenarios that are difficult to reproduce with live APIs.
+- Visualizes framebuffer differences and dirty regions to develop and debug full versus partial refresh behavior before testing on hardware.
+
 ## Hardware
 
 | Part | Notes |
@@ -40,4 +49,3 @@ idf.py menuconfig
 
 -> Component config -> LVGL configuration
 ```
-
