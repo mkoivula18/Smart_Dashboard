@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "lvgl.h"
 #include "esp_chip_info.h"
+#include "esp_log.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
@@ -22,6 +23,9 @@ void print_esp32_info();
 extern "C" void app_main(void)
 {
     // esp_log_level_set("*", ESP_LOG_WARN);
+    // Certificate validation succeeds on every HTTPS request; keep it out of
+    // normal serial output while preserving warnings and errors.
+    esp_log_level_set("esp-x509-crt-bundle", ESP_LOG_WARN);
     print_esp32_info();
 
     Display display(framebuffer);

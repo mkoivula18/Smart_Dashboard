@@ -41,8 +41,8 @@ std::string InternetUser::fetch_xml_from_url(const char *url)
     }
 
     int status = esp_http_client_get_status_code(client);
-    ESP_LOGI(TAG, "HTTP status: %d", status);
-    ESP_LOGI(TAG, "Received %d bytes", response.size());
+    ESP_LOGD(TAG, "HTTP status: %d", status);
+    ESP_LOGD(TAG, "Received %d bytes", response.size());
 
     esp_http_client_cleanup(client);
 

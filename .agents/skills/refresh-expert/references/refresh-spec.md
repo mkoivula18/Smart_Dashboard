@@ -12,7 +12,8 @@
 - Use at boot, for recovery, and after 20 completed partial refreshes.
 - `Epd::Init()` initializes SPI once; `Epd::InitFullUpdate()` resets only the panel controller.
 - LVGL renders the full 800×480 framebuffer in `LV_DISPLAY_RENDER_MODE_FULL`.
-- `Epd::DisplayFrame()` transfers the full frame through `0x13`, inverting LVGL I1 bits, then sends `0x12`.
+- `Epd::DisplayFrame()` writes LVGL I1 data to `0x10`, then its inverted form to `0x13`, followed by `0x12`.
+- Both RAM planes must be written for clean subsequent partial updates on the target panel; retain this empirically validated sequence unless cold-boot and recovery tests pass without it.
 - Full refresh is slow and visible, but clears accumulated ghosting.
 
 ## Partial refresh
@@ -21,6 +22,7 @@
 - Widget roots use an opaque white background so shorter text overwrites old glyphs.
 - LVGL expands every partial invalidation to `x = 0..799` while retaining the dirty Y range.
 - This full-width band is a Waveshare V2 workaround for corrupt non-zero-X partial windows.
+- Every partial update therefore transfers an 800-pixel-wide band; measure power and latency before enabling animated or high-frequency UI.
 - `Epd::BeginPartialUpdate()` enters partial controller mode once per LVGL refresh cycle.
 - `Epd::WriteRegion()` configures `0x90`, writes direct LVGL I1 bytes through `0x13`, and does not visibly refresh.
 - `Epd::EndPartialUpdate()` sends `0x12` only after the last LVGL flush.
@@ -37,6 +39,6 @@
 ## Verification
 
 - Run `ninja -C build` and `git diff --check`.
-- Hardware smoke test: `XX:XX → 12:34`, then repeated minute changes.
+- Hardware smoke test after cold boot: `XX:XX → 12:34`, then repeated minute changes.
 - Test longer-to-shorter Wi-Fi and weather values.
-- Confirm boot and threshold-triggered full refresh still work.
+- Confirm the first partial update after boot and after the 20-update full-refresh recovery is clean.

@@ -59,10 +59,10 @@ Do not expand a partial rectangle in `Epd::WriteRegion()`: the extra pixels woul
 
 ## Validation checklist
 
-- `XX:XX → 12:34` removes all old glyph pixels.
+- After a cold boot, `XX:XX → 12:34` removes all old glyph pixels.
 - A clock update refreshes only the clock's rows, without a full-panel flash.
 - Wi-Fi and weather updates clear longer previous text.
-- A full refresh still succeeds on boot and after 20 partial refreshes.
+- The first partial update after boot and after the 20-update full-refresh recovery is clean.
 - Repeated partial updates remain legible at the intended operating temperature.
 
 ## Known scope

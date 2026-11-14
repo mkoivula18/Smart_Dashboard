@@ -21,7 +21,7 @@ struct ParserState
 std::string WeatherStation::get_temperature_xml()
 {
     std::string xml = fetch_xml_from_url(FMI_URL.c_str());
-    ESP_LOGI(TAG, "XML length: %d", xml.size());
+    ESP_LOGD(TAG, "XML length: %d", xml.size());
     // ESP_LOGI(TAG, "%s", xml.c_str());
 
     if (xml.empty())
@@ -60,7 +60,7 @@ std::string WeatherStation::get_temperature_xml()
 
     parser_state.latest_temperature = std::to_string(temp);
 
-    ESP_LOGI(TAG, "Latest time: %s, Latest temperature: %sC",
+    ESP_LOGD(TAG, "Latest time: %s, Latest temperature: %sC",
              parser_state.latest_time.c_str(),
              parser_state.latest_temperature.c_str());
 

@@ -272,8 +272,18 @@ void Epd::Reset(void) {
 }
 
 void Epd::DisplayFrame(const unsigned char* frame_buffer) {
-    // Keep the established full-refresh transfer protocol independent from
-    // the panel-specific partial-refresh path below.
+    // This V2 panel requires both image RAM planes to be written during a
+    // full refresh for the next partial update to remain clean. This sequence
+    // is validated on the target panel; do not reduce it to only 0x13 without
+    // repeating the cold-boot and full-recovery partial-refresh tests.
+    SendCommand(0x10);
+    for (unsigned long j = 0; j < height; j++) {
+        for (unsigned long i = 0; i < width/8; i++) {
+            SendData(frame_buffer[i + j * width/8]);
+        }
+    }
+
+    // The new-image plane uses the inverse LVGL I1 polarity in full mode.
     SendCommand(0x13);
     for (unsigned long j = 0; j < height; j++) {
         for (unsigned long i = 0; i < width/8; i++) {
@@ -358,9 +368,8 @@ bool Epd::WriteRegion(const lv_area_t &area, const uint8_t *pixels)
     SendData(y_end & 0xFF);
     SendData(0x01);
 
-    // In partial mode this controller expects the direct LVGL I1 bits here.
-    // Unlike the full-refresh path, do not invert them and do not write DTM1.
-    // This matches Waveshare's EPD_7IN5_V2_Display_Part implementation.
+    // Partial mode uses the panel's direct I1 polarity. This intentionally
+    // differs from DisplayFrame(), whose full-refresh transfer inverts bytes.
     SendCommand(0x13);
     for (int32_t row = 0; row < region_height; ++row) {
         const uint8_t *row_pixels = pixels + (static_cast<size_t>(row) * bytes_per_row);
