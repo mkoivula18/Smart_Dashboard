@@ -10,8 +10,8 @@ Display::Display(unsigned char *buffer) : framebuffer(buffer)
     int ret = epd.Init();
     printf("Epd Init %s\n", (ret ? "failed" : "successful!"));
     
-    int partial_init = epd.EPD_7IN5_V2_Init_Part();
-    printf("Epd Partial Init %s\n", (partial_init ? "failed" : "successful!"));
+    // int partial_init = epd.EPD_7IN5_V2_Init_Part();
+    // printf("Epd Partial Init %s\n", (partial_init ? "failed" : "successful!"));
 
     lv_init();
     initialize_lvgl_display();
