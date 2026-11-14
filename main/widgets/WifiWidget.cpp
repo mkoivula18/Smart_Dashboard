@@ -9,6 +9,8 @@ void WifiWidget::create(lv_obj_t *parent, const char *status_text)
 
     container_ = lv_obj_create(parent);
     lv_obj_set_size(container_, 280, 80);
+    set_partial_refresh_background();
+    lv_obj_set_style_pad_all(container_, 0, 0);
 
     icon_label_ = lv_label_create(container_);
     lv_label_set_text(icon_label_, LV_SYMBOL_WIFI);

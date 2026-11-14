@@ -25,7 +25,7 @@ public:
         return container_ != nullptr;
     }
 
-    lv_obj_t *get_container()
+    lv_obj_t *get_container() const
     {
         return container_;
     }
@@ -38,5 +38,18 @@ public:
     }
 
 protected:
+    void set_partial_refresh_background()
+    {
+        if (container_ == nullptr) {
+            return;
+        }
+
+        // A partial refresh must write white pixels over content that has been
+        // removed (for example when "XX:XX" becomes a narrower time string).
+        lv_obj_set_style_bg_color(container_, lv_color_white(), 0);
+        lv_obj_set_style_bg_opa(container_, LV_OPA_COVER, 0);
+        lv_obj_set_style_border_width(container_, 0, 0);
+    }
+
     lv_obj_t *container_ = nullptr;
 };

@@ -11,9 +11,7 @@ void WeatherWidget::create(lv_obj_t *parent, const char *value, const char *capt
     printf("creating weather widget, parent = %p\n", (void*)parent);
     container_ = lv_obj_create(parent);
     lv_obj_set_size(container_, SCREEN_SIZE_WIDTH, 160);
-
-    lv_obj_set_style_bg_opa(container_, LV_OPA_TRANSP, 0);
-    lv_obj_set_style_border_width(container_, 0, 0);
+    set_partial_refresh_background();
     lv_obj_set_style_pad_all(container_, 0, 0);
 
     temp_subcontainer_ = lv_obj_create(container_);
