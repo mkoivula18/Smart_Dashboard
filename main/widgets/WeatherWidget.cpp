@@ -1,62 +1,75 @@
 #include "WeatherWidget.hpp"
-#include <stdio.h>
 
-void WeatherWidget::create(lv_obj_t *parent, const char *value, const char *caption)
+namespace {
+constexpr WeatherIconKind PLACEHOLDER_ICON = WeatherIconKind::Placeholder;
+constexpr const char *WEEKDAY_SHORT[] = {"su", "ma", "ti", "ke", "to", "pe", "la"};
+constexpr int WEEKDAY_COUNT = sizeof(WEEKDAY_SHORT) / sizeof(WEEKDAY_SHORT[0]);
+
+constexpr int PLACEHOLDER_LOW_TEMPERATURE = -6;
+constexpr int PLACEHOLDER_HIGH_TEMPERATURE = 2;
+}
+
+void WeatherWidget::create(lv_obj_t *parent)
 {
     if (container_ != nullptr) {
-        set_value(value);
-        set_caption(caption);
         return;
     }
-    printf("creating weather widget, parent = %p\n", (void*)parent);
+
     container_ = lv_obj_create(parent);
-    lv_obj_set_size(container_, SCREEN_SIZE_WIDTH, 160);
+    lv_obj_set_size(container_, WIDGET_WIDTH, WIDGET_HEIGHT);
     set_partial_refresh_background();
     lv_obj_set_style_pad_all(container_, 0, 0);
+    add_borders_to_container();
 
-    temp_subcontainer_ = lv_obj_create(container_);
-    lv_obj_set_size(temp_subcontainer_, 320, 120);
-    lv_obj_center(temp_subcontainer_);
-    lv_obj_set_style_bg_opa(temp_subcontainer_, LV_OPA_TRANSP, 0);
-    lv_obj_set_style_border_color(temp_subcontainer_, lv_color_black(), 0);
-    lv_obj_set_style_border_width(temp_subcontainer_, 0, 0);
-    lv_obj_set_style_radius(temp_subcontainer_, 12, 0);
-    lv_obj_set_style_pad_all(temp_subcontainer_, 12, 0);
+    current_day_unit_.create_current_day(
+        container_, CURRENT_UNIT_WIDTH, WIDGET_HEIGHT,
+        {{"XX", PLACEHOLDER_LOW_TEMPERATURE,
+          PLACEHOLDER_HIGH_TEMPERATURE, PLACEHOLDER_ICON}, 1});
+    lv_obj_set_pos(current_day_unit_.root(), OUTER_PADDING, 0);
 
-    value_label_ = lv_label_create(temp_subcontainer_);
-    lv_label_set_text(value_label_, value);
-    lv_obj_set_style_text_font(value_label_, &lv_font_montserrat_48, 0);
-    lv_obj_align(value_label_, LV_ALIGN_TOP_MID, -18, 10);
+    // LVGL resolves object coordinates lazily. Force that calculation before
+    // deriving the forecast row from the current unit's actual geometry.
+    lv_obj_update_layout(container_);
+    const lv_coord_t forecast_start_x = lv_obj_get_x(current_day_unit_.root()) +
+                                        lv_obj_get_width(current_day_unit_.root()) + UNIT_GAP;
+    const lv_coord_t forecast_area_width = lv_obj_get_width(container_) -
+                                           forecast_start_x - OUTER_PADDING;
 
-    unit_label_ = lv_label_create(temp_subcontainer_);
-    lv_label_set_text(unit_label_, "°C");
-    lv_obj_set_style_text_font(unit_label_, &lv_font_montserrat_24, 0);
-    lv_obj_align_to(unit_label_, value_label_, LV_ALIGN_OUT_RIGHT_TOP, 6, 10);
+    const lv_coord_t forecast_unit_width =
+        (forecast_area_width - (FORECAST_DAY_COUNT - 1) * UNIT_GAP) /
+        FORECAST_DAY_COUNT;
 
-    caption_label_ = lv_label_create(temp_subcontainer_);
-    lv_label_set_text(caption_label_, caption);
-    lv_obj_set_style_text_font(caption_label_, &lv_font_montserrat_14, 0);
-    lv_obj_align(caption_label_, LV_ALIGN_BOTTOM_MID, 0, -8);
+    for (size_t index = 0; index < FORECAST_DAY_COUNT; ++index) {
+        forecast_units_[index].create_forecast(
+            container_, forecast_unit_width, WIDGET_HEIGHT,
+            {"XX", PLACEHOLDER_LOW_TEMPERATURE,
+             PLACEHOLDER_HIGH_TEMPERATURE, PLACEHOLDER_ICON});
+        lv_obj_set_pos(forecast_units_[index].root(),
+                       forecast_start_x + index * (forecast_unit_width + UNIT_GAP), 0);
+    }
 }
 
-void WeatherWidget::set_value(const char *value)
+void WeatherWidget::set_current_temperature(int temperature)
 {
-    if (value_label_ == nullptr || unit_label_ == nullptr) {
-        return;
-    }
-
-    lv_label_set_text(value_label_, value);
-    // A label's width changes with the number of digits. Re-apply the
-    // relative alignment so the unit keeps a consistent gap after 1, 12,
-    // and negative temperatures alike.
-    lv_obj_align_to(unit_label_, value_label_, LV_ALIGN_OUT_RIGHT_TOP, 6, 10);
+    current_day_unit_.set_current_temperature(temperature);
 }
 
-void WeatherWidget::set_caption(const char *caption)
+bool WeatherWidget::set_current_weekday(int weekday_index)
 {
-    if (caption_label_ == nullptr) {
-        return;
+    if (weekday_index < 0 || weekday_index >= WEEKDAY_COUNT ||
+        weekday_index == current_weekday_index_) {
+        return false;
     }
 
-    lv_label_set_text(caption_label_, caption);
+    current_weekday_index_ = weekday_index;
+    current_day_unit_.set_weekday_short(WEEKDAY_SHORT[weekday_index]);
+    for (size_t index = 0; index < FORECAST_DAY_COUNT; ++index) {
+        const int days_after_current_day = static_cast<int>(index) + 1;
+        const int forecast_weekday_index =
+            (weekday_index + days_after_current_day) % WEEKDAY_COUNT;
+
+        forecast_units_[index].set_weekday_short(
+            WEEKDAY_SHORT[forecast_weekday_index]);
+    }
+    return true;
 }

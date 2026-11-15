@@ -1,5 +1,6 @@
 #pragma once
 
+#include <optional>
 #include <stdio.h>
 #include "InternetUser.hpp"
 
@@ -11,7 +12,7 @@ public:
         ESP_LOGI(TAG, "I am WeatherStation. Nice to meet you.\n");
     }
 
-    std::string get_temperature_xml();
+    std::optional<int> get_current_temperature();
 
 private:
     const char *TAG = "WeatherStation";

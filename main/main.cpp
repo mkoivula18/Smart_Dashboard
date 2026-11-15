@@ -11,27 +11,33 @@
 #include "DataHandler.hpp"
 
 #include "secrets.hpp"
+#include <optional>
 #include <string>
 
 // Comment out this line to return to the normal Wi-Fi, NTP, and API updates.
 // #define DISPLAY_REFRESH_TEST
 
+namespace {
+constexpr uint32_t DASHBOARD_UPDATE_INTERVAL_SECONDS = 40;
+
+#ifdef DISPLAY_REFRESH_TEST
 void run_display_refresh_test(Display &display)
 {
     static int refresh_step = 0;
     static int temperature = -99;
 
     char clock_text[9];
-    char temperature_text[5];
     snprintf(clock_text, sizeof(clock_text), "%02d:%02d",
              (refresh_step / 60) % 24, refresh_step % 60);
-    snprintf(temperature_text, sizeof(temperature_text), "%d", temperature);
 
     display.update_clock(clock_text, "Testi", "15.11.2026");
-    display.update_weather(temperature_text);
+    display.update_weather_weekdays(0);
+    display.update_weather(temperature);
 
     refresh_step = (refresh_step + 1) % (24 * 60);
     temperature = (temperature == 99) ? -99 : temperature + 1;
+}
+#endif
 }
 
 // Initialize buffer with zeros
@@ -72,6 +78,8 @@ extern "C" void app_main(void)
     // display.set_sanity_screen_markings();
     while(true)
     {
+        // No displayed value changes more often than once per minute in
+        // normal operation. The faster test loop above remains opt-in.
         data_handler.update_current_temperature();
         data_handler.update_current_time();
 
@@ -82,10 +90,15 @@ extern "C" void app_main(void)
                 display.update_clock(data_handler.get_current_time().c_str(),
                                      data_handler.get_current_weekday().c_str(),
                                      data_handler.get_current_date().c_str());
+                display.update_weather_weekdays(data_handler.get_current_weekday_index());
             }
             if (data_available->weather)
             {
-                display.update_weather(data_handler.get_current_temperature().c_str());
+                const std::optional<int> &temperature = data_handler.get_current_temperature();
+                if (temperature.has_value())
+                {
+                    display.update_weather(*temperature);
+                }
             }
             if (data_available->wifi)
             {
@@ -99,7 +112,7 @@ extern "C" void app_main(void)
         data_handler.clear_data_available();
 
         display.process_lvgl();
-        vTaskDelay(pdMS_TO_TICKS(1000));
+        vTaskDelay(pdMS_TO_TICKS(DASHBOARD_UPDATE_INTERVAL_SECONDS * 1000));
     }
 }
 
