@@ -41,11 +41,15 @@ void WeatherWidget::create(lv_obj_t *parent, const char *value, const char *capt
 
 void WeatherWidget::set_value(const char *value)
 {
-    if (value_label_ == nullptr) {
+    if (value_label_ == nullptr || unit_label_ == nullptr) {
         return;
     }
 
     lv_label_set_text(value_label_, value);
+    // A label's width changes with the number of digits. Re-apply the
+    // relative alignment so the unit keeps a consistent gap after 1, 12,
+    // and negative temperatures alike.
+    lv_obj_align_to(unit_label_, value_label_, LV_ALIGN_OUT_RIGHT_TOP, 6, 10);
 }
 
 void WeatherWidget::set_caption(const char *caption)

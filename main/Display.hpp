@@ -38,7 +38,7 @@ class Display
         void process_lvgl();
         void update_wifi(const char* status_message);
         void update_weather(const char* value);
-        void update_clock(const char* time);
+        void update_clock(const char* time, const char* weekday, const char* date);
         void refresh_widget(Widget *widget);
 
         void refresh_full();
@@ -49,19 +49,15 @@ class Display
         Epd epd;
         uint8_t *framebuffer;
         lv_display_t *lvgl_display = nullptr;
-        uint32_t partial_refresh_count = 0;
-        bool full_refresh_due = false;
-        bool partial_cycle_has_region = false;
-        bool partial_cycle_failed = false;
         bool display_ready = false;
 
-        static constexpr uint32_t FULL_REFRESH_AFTER_PARTIAL_UPDATES = 20;
         static constexpr lv_coord_t PARTIAL_REFRESH_X1 = 0;
         static constexpr lv_coord_t PARTIAL_REFRESH_X2 = EPD_WIDTH - 1;
 
         lv_obj_t *temperature_number;
 
         lv_obj_t *main_screen           = nullptr;
+        lv_obj_t *header_container       = nullptr;
         WeatherWidget *weather_widget   = nullptr;
         WifiWidget *wifi_widget         = nullptr;
         ClockWidget *clock_widget       = nullptr;

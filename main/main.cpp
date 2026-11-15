@@ -13,6 +13,26 @@
 #include "secrets.hpp"
 #include <string>
 
+// Comment out this line to return to the normal Wi-Fi, NTP, and API updates.
+// #define DISPLAY_REFRESH_TEST
+
+void run_display_refresh_test(Display &display)
+{
+    static int refresh_step = 0;
+    static int temperature = -99;
+
+    char clock_text[9];
+    char temperature_text[5];
+    snprintf(clock_text, sizeof(clock_text), "%02d:%02d",
+             (refresh_step / 60) % 24, refresh_step % 60);
+    snprintf(temperature_text, sizeof(temperature_text), "%d", temperature);
+
+    display.update_clock(clock_text, "Testi", "15.11.2026");
+    display.update_weather(temperature_text);
+
+    refresh_step = (refresh_step + 1) % (24 * 60);
+    temperature = (temperature == 99) ? -99 : temperature + 1;
+}
 
 // Initialize buffer with zeros
 // LVGL stores its I1 palette immediately before the pixel data.
@@ -29,6 +49,16 @@ extern "C" void app_main(void)
     print_esp32_info();
 
     Display display(framebuffer);
+
+#ifdef DISPLAY_REFRESH_TEST
+    while (true)
+    {
+        run_display_refresh_test(display);
+        display.process_lvgl();
+        vTaskDelay(pdMS_TO_TICKS(1000));
+    }
+#endif
+
     WifiHelper wifi_helper;
 
     bool wifi_connected = wifi_helper.connect_to_wifi(WIFI_SSID, WIFI_PASSWORD);
@@ -49,7 +79,9 @@ extern "C" void app_main(void)
         {
             if (data_available->clock)
             {
-                display.update_clock(data_handler.get_current_time().c_str());
+                display.update_clock(data_handler.get_current_time().c_str(),
+                                     data_handler.get_current_weekday().c_str(),
+                                     data_handler.get_current_date().c_str());
             }
             if (data_available->weather)
             {

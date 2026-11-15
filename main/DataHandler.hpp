@@ -36,6 +36,8 @@ public:
     void set_current_date(const std::string& date);
     const std::string& get_current_date() const;
 
+    const std::string& get_current_weekday() const;
+
     void set_current_time(const std::string& time);
     const std::string& get_current_time() const;
 
@@ -77,6 +79,7 @@ private:
 
     std::string current_temperature{};
     std::string current_date{};
+    std::string current_weekday{};
     std::string current_time{};
     DataAvailable data_available{};
 

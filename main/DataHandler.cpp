@@ -1,6 +1,13 @@
 #include "DataHandler.hpp"
 #include "esp_netif_sntp.h"
 
+namespace {
+constexpr const char *VIIKONPAIVAT[] = {
+    "Sunnuntai", "Maanantai", "Tiistai", "Keskiviikko",
+    "Torstai", "Perjantai", "Lauantai",
+};
+}
+
 DataHandler::DataHandler()
 {
     printf("Datahandler here!\n");
@@ -55,17 +62,20 @@ void DataHandler::update_current_time()
 
     localtime_r(&now_c, &time_info);
 
-    std::put_time(&time_info, "%H:%M");
+    char time_buffer[10];
+    char date_buffer[16];
+    strftime(time_buffer, sizeof(time_buffer), "%H:%M", &time_info);
+    strftime(date_buffer, sizeof(date_buffer), "%d.%m.%Y", &time_info);
 
-    char buffer[10];
-    strftime(buffer, sizeof(buffer), "%H:%M", &time_info);
+    const std::string new_time(time_buffer);
+    const std::string new_date(date_buffer);
+    const std::string new_weekday(VIIKONPAIVAT[time_info.tm_wday]);
 
-    std::string new_time;
-    new_time.assign(buffer);
-
-    if (current_time != new_time)
+    if (current_time != new_time || current_date != new_date || current_weekday != new_weekday)
     {
         set_current_time(new_time);
+        set_current_date(new_date);
+        current_weekday = new_weekday;
         set_clock_data_available(true);
     }
 }
@@ -88,6 +98,11 @@ void DataHandler::set_current_date(const std::string& date)
 const std::string& DataHandler::get_current_date() const
 {
     return current_date;
+}
+
+const std::string& DataHandler::get_current_weekday() const
+{
+    return current_weekday;
 }
 
 void DataHandler::set_current_time(const std::string& time)

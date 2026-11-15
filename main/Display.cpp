@@ -20,19 +20,24 @@ Display::Display(unsigned char *buffer) : framebuffer(buffer)
     lv_init();
     initialize_lvgl_display();
 
-    clock_widget = new ClockWidget(main_screen, "XX:XX");
-    clock_widget->set_position(LV_ALIGN_OUT_TOP_MID, 0, 0);
-    // clock_widget->add_borders_to_container();
+    header_container = lv_obj_create(main_screen);
+    lv_obj_set_size(header_container, SCREEN_SIZE_WIDTH, 120);
+    lv_obj_align(header_container, LV_ALIGN_TOP_MID, 0, 0);
+    lv_obj_set_style_bg_opa(header_container, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_border_width(header_container, 0, 0);
+    lv_obj_set_style_pad_all(header_container, 0, 0);
+
+    clock_widget = new ClockWidget(header_container, "XX:XX", "", "");
+    clock_widget->set_position(LV_ALIGN_TOP_LEFT, 0, 0);
+    clock_widget->add_borders_to_container();
 
     weather_widget = new WeatherWidget(main_screen, "9", "Ulkolampotila");
-    // weather_widget->add_borders_to_container();
+    weather_widget->set_position(LV_ALIGN_TOP_MID, 0, 128);
+    weather_widget->add_borders_to_container();
 
-    wifi_widget = new WifiWidget(main_screen, "Unknown status");
+    wifi_widget = new WifiWidget(header_container, "Unknown");
     wifi_widget->set_position(LV_ALIGN_TOP_RIGHT, 0, 0);
-    // wifi_widget->add_borders_to_container();
-
-    lv_obj_set_flex_flow(main_screen, LV_FLEX_FLOW_COLUMN);
-    lv_obj_set_style_pad_row(main_screen, 8, 0);
+    wifi_widget->add_borders_to_container();
 
     // Draw a known-good full image before switching LVGL to area-local buffers.
     display_ready = true;
@@ -60,8 +65,8 @@ lv_display_t *Display::initialize_lvgl_display()
     // render a complete horizontal band, so the flush buffer really contains
     // pixels for x = 0..799 (rather than expanding the area later in the EPD
     // driver, where those pixels would not exist).
-    lv_display_add_event_cb(lvgl_display, expand_partial_refresh_area,
-                            LV_EVENT_INVALIDATE_AREA, nullptr);
+    // lv_display_add_event_cb(lvgl_display, expand_partial_refresh_area,
+    //                         LV_EVENT_INVALIDATE_AREA, nullptr);
 
     // Keep the screen-sized buffer for the first implementation. LVGL still
     // renders only invalidated areas, while the larger buffer avoids splitting
@@ -96,9 +101,6 @@ void Display::refresh_full()
         printf("Epd full-refresh init failed\n");
         return;
     }
-    partial_refresh_count = 0;
-    full_refresh_due = false;
-
     lv_display_set_render_mode(lvgl_display, LV_DISPLAY_RENDER_MODE_FULL);
     lv_obj_invalidate(lv_screen_active());
     lv_refr_now(lvgl_display);
@@ -141,15 +143,13 @@ void Display::update_weather(const char *value)
     refresh_widget(weather_widget);
 }
 
-void Display::update_clock(const char *time)
+void Display::update_clock(const char *time, const char *weekday, const char *date)
 {
     if (!display_ready || clock_widget == nullptr) {
         return;
     }
 
-    lv_display_enable_invalidation(lvgl_display, false);
-    clock_widget->set_time(time);
-    lv_display_enable_invalidation(lvgl_display, true);
+    clock_widget->set_datetime(time, weekday, date);
     refresh_widget(clock_widget);
 }
 
@@ -161,13 +161,6 @@ void Display::refresh_widget(Widget *widget)
 
     lv_obj_t *container = widget->get_container();
     if (container == nullptr) {
-        return;
-    }
-
-    if (full_refresh_due) {
-        // Refresh on the next content change instead of interrupting a partial
-        // flush cycle from inside the LVGL callback.
-        refresh_full();
         return;
     }
 
@@ -238,37 +231,28 @@ void Display::flush_callback(lv_display_t *display, const lv_area_t *area, unsig
         return;
     }
 
-    // Validate before opening a controller transaction. A failed area is
-    // recovered by a full refresh on the next content update.
-    bool wrote_region = false;
+    // Invalid partial regions are logged and skipped. Runtime updates never
+    // fall back to full refresh because that path is reserved for boot.
     if (!displayObject->epd.IsValidPartialArea(*area)) {
         printf("Skipping invalid LVGL partial area\n");
-        displayObject->partial_cycle_failed = true;
     }
     else {
         // A logical LVGL refresh can contain multiple flushes. Upload every
         // region first and make the panel visible only after the last one.
         const bool began = displayObject->epd.BeginPartialUpdate();
-        wrote_region = began && displayObject->epd.WriteRegion(*area, pixels);
-        displayObject->partial_cycle_failed |= !wrote_region;
+        if (!began) {
+            printf("Could not begin LVGL partial update\n");
+        }
+        else if (!displayObject->epd.WriteRegion(*area, pixels)) {
+            printf("Could not write LVGL partial area\n");
+        }
     }
-    displayObject->partial_cycle_has_region |= wrote_region;
 
     if (lv_display_flush_is_last(display)) {
-        if (displayObject->partial_cycle_has_region) {
-            displayObject->epd.EndPartialUpdate();
-        }
-
-        if (displayObject->partial_cycle_failed) {
-            displayObject->full_refresh_due = true;
-        }
-        else if (displayObject->partial_cycle_has_region) {
-            ++displayObject->partial_refresh_count;
-            displayObject->full_refresh_due =
-                displayObject->partial_refresh_count >= FULL_REFRESH_AFTER_PARTIAL_UPDATES;
-        }
-        displayObject->partial_cycle_has_region = false;
-        displayObject->partial_cycle_failed = false;
+        // EndPartialUpdate() is a no-op if no partial transaction began.
+        // Calling it unconditionally also closes a transaction whose write
+        // failed after BeginPartialUpdate().
+        displayObject->epd.EndPartialUpdate();
     }
 
     lv_display_flush_ready(display);

@@ -9,7 +9,7 @@
 
 ## Full refresh
 
-- Use at boot, for recovery, and after 20 completed partial refreshes.
+- Use at boot. Runtime updates use partial refresh only.
 - `Epd::Init()` initializes SPI once; `Epd::InitFullUpdate()` resets only the panel controller.
 - LVGL renders the full 800×480 framebuffer in `LV_DISPLAY_RENDER_MODE_FULL`.
 - `Epd::DisplayFrame()` writes LVGL I1 data to `0x10`, then its inverted form to `0x13`, followed by `0x12`.
@@ -33,7 +33,7 @@
 - `lv_area_t` coordinates are inclusive.
 - The driver accepts only in-panel, non-empty, 8-pixel-aligned partial areas.
 - Validate a partial area before opening the controller transaction.
-- On a partial failure, schedule a safe full refresh rather than counting the cycle.
+- On a partial failure, log and skip the failed area; do not trigger a runtime full refresh.
 - Do not enlarge a region inside the EPD driver: LVGL has rendered only the supplied local buffer.
 
 ## Verification
@@ -41,4 +41,4 @@
 - Run `ninja -C build` and `git diff --check`.
 - Hardware smoke test after cold boot: `XX:XX → 12:34`, then repeated minute changes.
 - Test longer-to-shorter Wi-Fi and weather values.
-- Confirm the first partial update after boot and after the 20-update full-refresh recovery is clean.
+- Confirm the first partial update after boot is clean and that repeated partial updates stay clean.

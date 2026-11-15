@@ -32,9 +32,15 @@ public:
 
     void add_borders_to_container()
     {
-        lv_obj_set_style_bg_opa(container_, LV_OPA_TRANSP, 0);
+        if (container_ == nullptr) {
+            return;
+        }
+
+        // Keep the opaque background configured by
+        // set_partial_refresh_background(). A transparent widget root would
+        // leave pixels behind when shorter content replaces older text.
         lv_obj_set_style_border_color(container_, lv_color_black(), 0);
-        lv_obj_set_style_border_width(container_, 4, 0);
+        lv_obj_set_style_border_width(container_, 1, 0);
     }
 
 protected:
