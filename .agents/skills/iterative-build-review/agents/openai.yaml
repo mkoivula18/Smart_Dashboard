@@ -1,0 +1,4 @@
+interface:
+  display_name: "Iterative Build Review"
+  short_description: "Plan, build, critique, and refine code"
+  default_prompt: "Use $iterative-build-review to plan, implement, critically review, and iterate on this change."
