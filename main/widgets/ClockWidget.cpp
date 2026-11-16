@@ -3,7 +3,8 @@
 void ClockWidget::create(lv_obj_t *parent, const char *time_text,
                          const char *weekday_text, const char *date_text)
 {
-    if (container_ != nullptr) {
+    if (container_ != nullptr)
+    {
         set_datetime(time_text, weekday_text, date_text);
         return;
     }
@@ -41,7 +42,8 @@ void ClockWidget::create(lv_obj_t *parent, const char *time_text,
 void ClockWidget::set_datetime(const char *time_text, const char *weekday_text,
                                const char *date_text)
 {
-    if (value_label_ == nullptr || weekday_label_ == nullptr || date_label_ == nullptr) {
+    if (value_label_ == nullptr || weekday_label_ == nullptr || date_label_ == nullptr)
+    {
         return;
     }
 

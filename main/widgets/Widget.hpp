@@ -8,7 +8,8 @@ class Widget
 public:
     void set_position(lv_align_t align, lv_coord_t x_ofs, lv_coord_t y_ofs)
     {
-        if (container_ == nullptr) {
+        if (container_ == nullptr)
+        {
             return;
         }
 
@@ -32,7 +33,8 @@ public:
 
     void add_borders_to_container()
     {
-        if (container_ == nullptr) {
+        if (container_ == nullptr)
+        {
             return;
         }
 
@@ -46,7 +48,8 @@ public:
 protected:
     void set_partial_refresh_background()
     {
-        if (container_ == nullptr) {
+        if (container_ == nullptr)
+        {
             return;
         }
 

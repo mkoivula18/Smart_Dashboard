@@ -2,7 +2,8 @@
 
 void WifiWidget::create(lv_obj_t *parent, const char *status_text)
 {
-    if (container_ != nullptr) {
+    if (container_ != nullptr)
+    {
         set_status(status_text);
         return;
     }
@@ -27,7 +28,8 @@ void WifiWidget::create(lv_obj_t *parent, const char *status_text)
 
 void WifiWidget::set_status(const char *status_text)
 {
-    if (status_label_ == nullptr) {
+    if (status_label_ == nullptr)
+    {
         return;
     }
 
@@ -36,7 +38,8 @@ void WifiWidget::set_status(const char *status_text)
 
 void WifiWidget::set_connected(bool connected)
 {
-    if (icon_label_ == nullptr) {
+    if (icon_label_ == nullptr)
+    {
         return;
     }
 

@@ -24,23 +24,29 @@ static int retry_count = 0;
 
 static void wifi_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data)
 {
-    if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) {
+    if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START)
+    {
         esp_wifi_connect();
     }
 
-    else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) {
-        if (retry_count < MAX_RETRY) {
+    else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED)
+    {
+        if (retry_count < MAX_RETRY)
+        {
             esp_wifi_connect();
             retry_count++;
             ESP_LOGI(TAG, "Retrying Wi-Fi connection...");
-        } else {
+        }
+        else
+        {
             xEventGroupSetBits(wifi_event_group, WIFI_FAILED_BIT);
         }
 
         ESP_LOGI(TAG, "Wi-Fi disconnected");
     }
 
-    else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
+    else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP)
+    {
         ip_event_got_ip_t *event = static_cast<ip_event_got_ip_t *>(event_data);
 
         ESP_LOGI(TAG, "Got IP: " IPSTR, IP2STR(&event->ip_info.ip));
@@ -106,12 +112,14 @@ bool WifiHelper::connect_to_wifi(const char *ssid, const char *password)
         portMAX_DELAY
     );
 
-    if (bits & WIFI_CONNECTED_BIT) {
+    if (bits & WIFI_CONNECTED_BIT)
+    {
         ESP_LOGI(TAG, "Connected to Wi-Fi: %s", ssid);
         return true;
     }
 
-    if (bits & WIFI_FAILED_BIT) {
+    if (bits & WIFI_FAILED_BIT)
+    {
         ESP_LOGE(TAG, "Failed to connect to Wi-Fi: %s", ssid);
         return false;
     }

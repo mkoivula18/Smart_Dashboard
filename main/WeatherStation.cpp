@@ -3,6 +3,8 @@
 #include <string.h>
 #include <expat.h>
 #include <cmath>
+#include <cstdlib>
+#include <optional>
 
 static void start_element(void *user_data, const XML_Char *name, const XML_Char **attrs);
 static void character_data(void *user_data, const XML_Char *text, int len);
@@ -18,19 +20,19 @@ struct ParserState
     std::string latest_temperature;
 };
 
-std::string WeatherStation::get_temperature_xml()
+std::optional<int> WeatherStation::get_current_temperature()
 {
-    std::string xml = fetch_xml_from_url(FMI_URL.c_str());
+    std::string xml = internet_user_.fetch_xml_from_url(FMI_URL.c_str());
     ESP_LOGD(TAG, "XML length: %d", xml.size());
     // ESP_LOGI(TAG, "%s", xml.c_str());
 
     if (xml.empty())
     {
         ESP_LOGW(TAG, "No XML received, skipping parse");
-        return "";
+        return std::nullopt;
     }
 
-    ParserState parser_state{}; 
+    ParserState parser_state{};
 
     XML_Parser parser = XML_ParserCreate(nullptr);
 
@@ -40,33 +42,41 @@ std::string WeatherStation::get_temperature_xml()
 
     XML_Status result = XML_Parse(parser, xml.c_str(), xml.size(), XML_TRUE);
 
-    if (result == XML_STATUS_ERROR) {
+    if (result == XML_STATUS_ERROR)
+    {
         ESP_LOGE(TAG, "XML parse error: %s",
                  XML_ErrorString(XML_GetErrorCode(parser)));
 
         XML_ParserFree(parser);
-        return "";
+        return std::nullopt;
     }
 
     if (parser_state.latest_temperature.empty())
     {
         ESP_LOGW(TAG, "XML parsed but no temperature value was found");
         XML_ParserFree(parser);
-        return "";
+        return std::nullopt;
     }
 
-    // Turn result from float to integer
-    int temp = (int)std::round(std::stof(parser_state.latest_temperature));
+    char *end = nullptr;
+    const float parsed_temperature = std::strtof(
+        parser_state.latest_temperature.c_str(), &end);
 
-    parser_state.latest_temperature = std::to_string(temp);
+    if (end == parser_state.latest_temperature.c_str())
+    {
+        ESP_LOGW(TAG, "Invalid temperature value: %s",
+                 parser_state.latest_temperature.c_str());
+        XML_ParserFree(parser);
+        return std::nullopt;
+    }
 
-    ESP_LOGD(TAG, "Latest time: %s, Latest temperature: %sC",
-             parser_state.latest_time.c_str(),
-             parser_state.latest_temperature.c_str());
+    const int temperature = static_cast<int>(std::round(parsed_temperature));
+    ESP_LOGD(TAG, "Latest time: %s, Latest temperature: %dC",
+             parser_state.latest_time.c_str(), temperature);
 
     XML_ParserFree(parser);
 
-    return parser_state.latest_temperature;
+    return temperature;
 }
 
 
@@ -96,7 +106,7 @@ void end_element(void *user_data, const XML_Char *name)
     {
         parser_state->latest_time = parser_state->current_text;
     }
-    
+
     if (strcmp(name, "wml2:value") == 0)
     {
         parser_state->latest_temperature = parser_state->current_text;

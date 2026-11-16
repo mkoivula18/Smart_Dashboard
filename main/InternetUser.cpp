@@ -27,14 +27,16 @@ std::string InternetUser::fetch_xml_from_url(const char *url)
 
     esp_http_client_handle_t client = esp_http_client_init(&config);
 
-    if (client == nullptr) {
+    if (client == nullptr)
+    {
         ESP_LOGE(TAG, "Failed to create HTTP client");
         return "";
     }
 
     esp_err_t err = esp_http_client_perform(client);
 
-    if (err != ESP_OK) {
+    if (err != ESP_OK)
+    {
         ESP_LOGE(TAG, "HTTP GET failed: %s", esp_err_to_name(err));
         esp_http_client_cleanup(client);
         return "";
@@ -46,7 +48,8 @@ std::string InternetUser::fetch_xml_from_url(const char *url)
 
     esp_http_client_cleanup(client);
 
-    if (status != 200) {
+    if (status != 200)
+    {
         return "";
     }
 

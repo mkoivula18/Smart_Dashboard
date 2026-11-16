@@ -27,7 +27,6 @@ class Display
         ~Display();
 
         static void flush_callback(lv_display_t *display, const lv_area_t *area, unsigned char *px_map);
-        static void expand_partial_refresh_area(lv_event_t *event);
         static uint32_t get_esp_time_cb(void);
 
 
@@ -37,8 +36,9 @@ class Display
         bool is_ready() const;
         void process_lvgl();
         void update_wifi(const char* status_message);
-        void update_weather(const char* value);
+        void update_weather(int current_temperature);
         void update_clock(const char* time, const char* weekday, const char* date);
+        void update_weather_weekdays(int weekday_index);
         void refresh_widget(Widget *widget);
 
         void refresh_full();

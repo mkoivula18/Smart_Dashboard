@@ -2,7 +2,7 @@
  *  @filename   :   epd7in5.h
  *  @brief      :   Header file for e-paper library epd7in5.cpp
  *  @author     :   Yehui from Waveshare
- *  
+ *
  *  Copyright (C) Waveshare     August 10 2017
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -39,7 +39,8 @@
 #define FRAME_BUFFER_SIZE_IN_BITS   EPD_HEIGHT * EPD_WIDTH
 #define FRAME_BUFFER_SIZE_IN_BYTES  EPD_HEIGHT * EPD_WIDTH / 8
 
-class Epd : EpdIf {
+class Epd : EpdIf
+{
 public:
     Epd();
     ~Epd();
@@ -67,7 +68,7 @@ public:
     void Sleep(void);
     void Clear(void);
     void Displaypart(const unsigned char* pbuffer, unsigned long Start_X, unsigned long Start_Y,unsigned long END_X,unsigned long END_Y);
- 
+
 private:
     unsigned int reset_pin;
     unsigned int dc_pin;

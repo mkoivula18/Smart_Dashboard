@@ -33,64 +33,72 @@
 static_assert(LV_DRAW_BUF_STRIDE_ALIGN == 1,
               "Partial refresh currently requires a packed LVGL I1 buffer");
 
-unsigned char Voltage_Frame_7IN5_V2[]={
+unsigned char Voltage_Frame_7IN5_V2[]=
+{
 	0x6, 0x3F, 0x3F, 0x11, 0x24, 0x7, 0x17,
 };
 
-unsigned char LUT_VCOM_7IN5_V2[]={	
-	0x0,	0xF,	0xF,	0x0,	0x0,	0x1,	
-	0x0,	0xF,	0x1,	0xF,	0x1,	0x2,	
-	0x0,	0xF,	0xF,	0x0,	0x0,	0x1,	
-	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	
-	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	
-	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	
-	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	
-};						
-
-unsigned char LUT_WW_7IN5_V2[]={	
-	0x10,	0xF,	0xF,	0x0,	0x0,	0x1,	
-	0x84,	0xF,	0x1,	0xF,	0x1,	0x2,	
-	0x20,	0xF,	0xF,	0x0,	0x0,	0x1,	
-	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	
-	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	
-	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	
-	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	
+unsigned char LUT_VCOM_7IN5_V2[]=
+{
+	0x0,	0xF,	0xF,	0x0,	0x0,	0x1,
+	0x0,	0xF,	0x1,	0xF,	0x1,	0x2,
+	0x0,	0xF,	0xF,	0x0,	0x0,	0x1,
+	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,
+	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,
+	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,
+	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,
 };
 
-unsigned char LUT_BW_7IN5_V2[]={	
-	0x10,	0xF,	0xF,	0x0,	0x0,	0x1,	
-	0x84,	0xF,	0x1,	0xF,	0x1,	0x2,	
-	0x20,	0xF,	0xF,	0x0,	0x0,	0x1,	
-	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	
-	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	
-	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	
-	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	
+unsigned char LUT_WW_7IN5_V2[]=
+{
+	0x10,	0xF,	0xF,	0x0,	0x0,	0x1,
+	0x84,	0xF,	0x1,	0xF,	0x1,	0x2,
+	0x20,	0xF,	0xF,	0x0,	0x0,	0x1,
+	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,
+	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,
+	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,
+	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,
 };
 
-unsigned char LUT_WB_7IN5_V2[]={	
-	0x80,	0xF,	0xF,	0x0,	0x0,	0x1,	
-	0x84,	0xF,	0x1,	0xF,	0x1,	0x2,	
-	0x40,	0xF,	0xF,	0x0,	0x0,	0x1,	
-	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	
-	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	
-	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	
-	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	
+unsigned char LUT_BW_7IN5_V2[]=
+{
+	0x10,	0xF,	0xF,	0x0,	0x0,	0x1,
+	0x84,	0xF,	0x1,	0xF,	0x1,	0x2,
+	0x20,	0xF,	0xF,	0x0,	0x0,	0x1,
+	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,
+	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,
+	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,
+	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,
 };
 
-unsigned char LUT_BB_7IN5_V2[]={	
-	0x80,	0xF,	0xF,	0x0,	0x0,	0x1,	
-	0x84,	0xF,	0x1,	0xF,	0x1,	0x2,	
-	0x40,	0xF,	0xF,	0x0,	0x0,	0x1,	
-	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	
-	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	
-	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	
-	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,	
+unsigned char LUT_WB_7IN5_V2[]=
+{
+	0x80,	0xF,	0xF,	0x0,	0x0,	0x1,
+	0x84,	0xF,	0x1,	0xF,	0x1,	0x2,
+	0x40,	0xF,	0xF,	0x0,	0x0,	0x1,
+	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,
+	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,
+	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,
+	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,
 };
 
-Epd::~Epd() {
+unsigned char LUT_BB_7IN5_V2[]=
+{
+	0x80,	0xF,	0xF,	0x0,	0x0,	0x1,
+	0x84,	0xF,	0x1,	0xF,	0x1,	0x2,
+	0x40,	0xF,	0xF,	0x0,	0x0,	0x1,
+	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,
+	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,
+	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,
+	0x0,	0x0,	0x0,	0x0,	0x0,	0x0,
 };
 
-Epd::Epd() {
+Epd::~Epd()
+{
+};
+
+Epd::Epd()
+{
     reset_pin = RST_PIN;
     dc_pin = DC_PIN;
     cs_pin = CS_PIN;
@@ -101,20 +109,23 @@ Epd::Epd() {
     heightInBytes = height / 8;
 };
 
-int Epd::Init(void) {
-    if (IfInit() != 0) {
+int Epd::Init(void)
+{
+    if (IfInit() != 0)
+    {
         return -1;
     }
 
     return InitFullUpdate();
 }
 
-int Epd::InitFullUpdate(void) {
+int Epd::InitFullUpdate(void)
+{
     // SPI is initialized once by Init(). Full-refresh recovery needs to reset
     // only the panel controller, otherwise spi_bus_initialize() fails.
     Reset();
 
-    // SendCommand(0x01); 
+    // SendCommand(0x01);
     // SendData(0x07);
     // SendData(0x07);
     // SendData(0x3f);
@@ -123,7 +134,7 @@ int Epd::InitFullUpdate(void) {
     // SendCommand(0x04);
     // DelayMs(100);
     // WaitUntilIdle();
-    
+
     // SendCommand(0X00);			//PANNEL SETTING
     // SendData(0x1F);   //KW-3f   KWR-2F	BWROTP 0f	BWOTP 1f
 
@@ -149,7 +160,7 @@ int Epd::InitFullUpdate(void) {
 	SendData(*(Voltage_Frame_7IN5_V2+1));  // VSH
 	SendData(*(Voltage_Frame_7IN5_V2+2));  //  VSL
 	SendData(*(Voltage_Frame_7IN5_V2+3));  //  VSHR
-	
+
 	SendCommand(0x82);  // VCOM DC Setting
 	SendData(*(Voltage_Frame_7IN5_V2+4));  // VCOM
 
@@ -158,7 +169,7 @@ int Epd::InitFullUpdate(void) {
 	SendData(0x27);
 	SendData(0x2F);
 	SendData(0x17);
-	
+
 	SendCommand(0x30);   // OSC Setting
 	SendData(*(Voltage_Frame_7IN5_V2+0));  // 2-0=100: N=4  ; 5-3=111: M=7  ;  3C=50Hz     3A=100HZ
 
@@ -209,7 +220,7 @@ int Epd::EPD_7IN5_V2_Init_Part(void)
     SendData(0x1F);         //KW-3f   KWR-2F	BWROTP 0f	BWOTP 1f
 
     SendCommand(0x04);      //POWER ON
-    DelayMs(100); 
+    DelayMs(100);
     WaitUntilIdle();        //Waiting for the electronic paper IC to release the idle signal
 
     SendCommand(0xE0);
@@ -223,7 +234,8 @@ int Epd::EPD_7IN5_V2_Init_Part(void)
 /**
  *  @brief: basic function for sending commands
  */
-void Epd::SendCommand(unsigned char command) {
+void Epd::SendCommand(unsigned char command)
+{
     DigitalWrite(dc_pin, LOW);
     SpiTransfer(command);
 }
@@ -231,7 +243,8 @@ void Epd::SendCommand(unsigned char command) {
 /**
  *  @brief: basic function for sending data
  */
-void Epd::SendData(unsigned char data){
+void Epd::SendData(unsigned char data)
+{
     DigitalWrite(dc_pin, HIGH);
     SpiTransfer(data);
 }
@@ -245,10 +258,12 @@ void Epd::SendDataBuffer(unsigned char *buffer, size_t len)
 /**
  *  @brief: Wait until the busy_pin goes HIGH
  */
-void Epd::WaitUntilIdle(void) {
+void Epd::WaitUntilIdle(void)
+{
     unsigned char busy;
     // printf("e-Paper Busy\r\n ");
-    do {
+    do
+    {
         SendCommand(0x71);
         busy = DigitalRead(busy_pin);
         DelayMs(20);
@@ -262,31 +277,37 @@ void Epd::WaitUntilIdle(void) {
  *          often used to awaken the module in deep sleep,
  *          see Epd::Sleep();
  */
-void Epd::Reset(void) {
+void Epd::Reset(void)
+{
     DigitalWrite(reset_pin, HIGH);
-    DelayMs(20); 
-    DigitalWrite(reset_pin, LOW);                //module reset    
+    DelayMs(20);
+    DigitalWrite(reset_pin, LOW);                //module reset
     DelayMs(4);
     DigitalWrite(reset_pin, HIGH);
-    DelayMs(20);    
+    DelayMs(20);
 }
 
-void Epd::DisplayFrame(const unsigned char* frame_buffer) {
+void Epd::DisplayFrame(const unsigned char* frame_buffer)
+{
     // This V2 panel requires both image RAM planes to be written during a
     // full refresh for the next partial update to remain clean. This sequence
     // is validated on the target panel; do not reduce it to only 0x13 without
     // repeating the cold-boot and full-recovery partial-refresh tests.
     SendCommand(0x10);
-    for (unsigned long j = 0; j < height; j++) {
-        for (unsigned long i = 0; i < width/8; i++) {
+    for (unsigned long j = 0; j < height; j++)
+    {
+        for (unsigned long i = 0; i < width/8; i++)
+        {
             SendData(frame_buffer[i + j * width/8]);
         }
     }
 
     // The new-image plane uses the inverse LVGL I1 polarity in full mode.
     SendCommand(0x13);
-    for (unsigned long j = 0; j < height; j++) {
-        for (unsigned long i = 0; i < width/8; i++) {
+    for (unsigned long j = 0; j < height; j++)
+    {
+        for (unsigned long i = 0; i < width/8; i++)
+        {
             SendData(~frame_buffer[i + j * width/8]);
         }
     }
@@ -297,14 +318,17 @@ void Epd::DisplayFrame(const unsigned char* frame_buffer) {
 
 bool Epd::BeginPartialUpdate()
 {
-    if (partial_update_active) {
+    if (partial_update_active)
+    {
         return true;
     }
 
     // Do not mix the full-refresh controller state with partial writes. The
     // previous implementation did that and produced visibly grainy output.
-    if (!partial_mode_initialized) {
-        if (EPD_7IN5_V2_Init_Part() != 0) {
+    if (!partial_mode_initialized)
+    {
+        if (EPD_7IN5_V2_Init_Part() != 0)
+        {
             return false;
         }
         partial_mode_initialized = true;
@@ -333,14 +357,16 @@ bool Epd::IsValidPartialArea(const lv_area_t &area) const
 
 bool Epd::WriteRegion(const lv_area_t &area, const uint8_t *pixels)
 {
-    if (!partial_update_active || pixels == nullptr) {
+    if (!partial_update_active || pixels == nullptr)
+    {
         return false;
     }
 
     // LVGL I1 partial rendering supplies an area-local buffer. It must already
     // be byte aligned: expanding the rectangle here would require pixels that
     // are not present in that buffer.
-    if (!IsValidPartialArea(area)) {
+    if (!IsValidPartialArea(area))
+    {
         printf("Invalid partial area: (%ld, %ld)-(%ld, %ld)\n",
                static_cast<long>(area.x1), static_cast<long>(area.y1),
                static_cast<long>(area.x2), static_cast<long>(area.y2));
@@ -371,9 +397,11 @@ bool Epd::WriteRegion(const lv_area_t &area, const uint8_t *pixels)
     // Partial mode uses the panel's direct I1 polarity. This intentionally
     // differs from DisplayFrame(), whose full-refresh transfer inverts bytes.
     SendCommand(0x13);
-    for (int32_t row = 0; row < region_height; ++row) {
+    for (int32_t row = 0; row < region_height; ++row)
+    {
         const uint8_t *row_pixels = pixels + (static_cast<size_t>(row) * bytes_per_row);
-        for (size_t byte = 0; byte < bytes_per_row; ++byte) {
+        for (size_t byte = 0; byte < bytes_per_row; ++byte)
+        {
             SendData(row_pixels[byte]);
         }
     }
@@ -383,7 +411,8 @@ bool Epd::WriteRegion(const lv_area_t &area, const uint8_t *pixels)
 
 void Epd::EndPartialUpdate()
 {
-    if (!partial_update_active) {
+    if (!partial_update_active)
+    {
         return;
     }
 
@@ -394,7 +423,8 @@ void Epd::EndPartialUpdate()
     partial_update_active = false;
 }
 
-void Epd::DisplayFrameBuffer(unsigned char* frame_buffer, size_t len) {
+void Epd::DisplayFrameBuffer(unsigned char* frame_buffer, size_t len)
+{
     SendCommand(0x13);
 
     *frame_buffer = ~(*frame_buffer);
@@ -431,7 +461,7 @@ void Epd::SetLut_by_host(unsigned char* lut_vcom,  unsigned char* lut_ww, unsign
 {
 	unsigned char count;
 
-	SendCommand(0x20); //VCOM	
+	SendCommand(0x20); //VCOM
 	for(count=0; count<42; count++)
 		SendData(lut_vcom[count]);
 
@@ -453,28 +483,31 @@ void Epd::SetLut_by_host(unsigned char* lut_vcom,  unsigned char* lut_ww, unsign
 }
 
 /**
- *  @brief: After this command is transmitted, the chip would enter the 
- *          deep-sleep mode to save power. 
- *          The deep sleep mode would return to standby by hardware reset. 
+ *  @brief: After this command is transmitted, the chip would enter the
+ *          deep-sleep mode to save power.
+ *          The deep sleep mode would return to standby by hardware reset.
  *          The only one parameter is a check code, the command would be
- *          executed if check code = 0xA5. 
+ *          executed if check code = 0xA5.
  *          You can use EPD_Reset() to awaken
  */
-void Epd::Sleep(void) {
+void Epd::Sleep(void)
+{
     SendCommand(0X02);
     WaitUntilIdle();
     SendCommand(0X07);
     SendData(0xA5);
 }
 
-void Epd::Clear(void) {
-    
+void Epd::Clear(void)
+{
+
     // SendCommand(0x10);
     // for(unsigned long i=0; i<height*width; i++) {
     //     SendData(0x00);
     // }
     SendCommand(0x13);
-    for(unsigned long i=0; i<height*width/8; i++)	{
+    for(unsigned long i=0; i<height*width/8; i++)
+    {
         SendData(0x00);
     }
     SendCommand(0x12);
