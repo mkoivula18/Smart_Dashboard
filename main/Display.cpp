@@ -22,21 +22,23 @@ Display::Display(unsigned char *buffer) : framebuffer(buffer)
 
     header_container = lv_obj_create(main_screen);
     lv_obj_set_size(header_container, SCREEN_SIZE_WIDTH, 120);
-    lv_obj_align(header_container, LV_ALIGN_TOP_MID, 0, 0);
+    lv_obj_align(header_container, LV_ALIGN_TOP_MID, 0, DASHBOARD_LAYOUT_MARGIN);
     lv_obj_set_style_bg_opa(header_container, LV_OPA_TRANSP, 0);
     lv_obj_set_style_border_width(header_container, 0, 0);
     lv_obj_set_style_pad_all(header_container, 0, 0);
 
     clock_widget = new ClockWidget(header_container, "XX:XX", "", "");
-    clock_widget->set_position(LV_ALIGN_TOP_LEFT, 0, 0);
+    clock_widget->set_position(LV_ALIGN_TOP_LEFT, DASHBOARD_LAYOUT_MARGIN, 0);
     clock_widget->add_borders_to_container();
 
-    weather_widget = new WeatherWidget(main_screen, "9", "Ulkolampotila");
-    weather_widget->set_position(LV_ALIGN_TOP_MID, 0, 128);
-    weather_widget->add_borders_to_container();
+    // Weather shares the centered content area with the header so its card
+    // borders remain inside the visible dashboard margins.
+    weather_widget = new WeatherWidget(main_screen);
+    weather_widget->set_position(LV_ALIGN_TOP_LEFT, DASHBOARD_LAYOUT_MARGIN,
+                                 DASHBOARD_LAYOUT_MARGIN + 120 + DASHBOARD_LAYOUT_GAP);
 
     wifi_widget = new WifiWidget(header_container, "Unknown");
-    wifi_widget->set_position(LV_ALIGN_TOP_RIGHT, 0, 0);
+    wifi_widget->set_position(LV_ALIGN_TOP_RIGHT, -DASHBOARD_LAYOUT_MARGIN, 0);
     wifi_widget->add_borders_to_container();
 
     // Draw a known-good full image before switching LVGL to area-local buffers.
@@ -60,13 +62,8 @@ lv_display_t *Display::initialize_lvgl_display()
     lv_display_set_color_format(lvgl_display, LV_COLOR_FORMAT_I1);
     lv_display_set_flush_cb(lvgl_display, flush_callback);
 
-    // This panel's partial-window controller is unreliable when a window starts
-    // at a non-zero X coordinate.  Expanding invalidations here makes LVGL
-    // render a complete horizontal band, so the flush buffer really contains
-    // pixels for x = 0..799 (rather than expanding the area later in the EPD
-    // driver, where those pixels would not exist).
-    // lv_display_add_event_cb(lvgl_display, expand_partial_refresh_area,
-    //                         LV_EVENT_INVALIDATE_AREA, nullptr);
+    // Runtime partial updates currently use LVGL's native invalidated rectangle.
+    // Do not expand it in the EPD driver because px_map contains only rendered pixels.
 
     // Keep the screen-sized buffer for the first implementation. LVGL still
     // renders only invalidated areas, while the larger buffer avoids splitting
@@ -131,14 +128,14 @@ void Display::update_wifi(const char *status_message)
     refresh_widget(wifi_widget);
 }
 
-void Display::update_weather(const char *value)
+void Display::update_weather(int current_temperature)
 {
     if (!display_ready || weather_widget == nullptr) {
         return;
     }
 
     lv_display_enable_invalidation(lvgl_display, false);
-    weather_widget->set_value(value);
+    weather_widget->set_current_temperature(current_temperature);
     lv_display_enable_invalidation(lvgl_display, true);
     refresh_widget(weather_widget);
 }
@@ -149,8 +146,26 @@ void Display::update_clock(const char *time, const char *weekday, const char *da
         return;
     }
 
+    lv_display_enable_invalidation(lvgl_display, false);
     clock_widget->set_datetime(time, weekday, date);
+    lv_display_enable_invalidation(lvgl_display, true);
+
     refresh_widget(clock_widget);
+}
+
+void Display::update_weather_weekdays(int weekday_index)
+{
+    if (!display_ready || weather_widget == nullptr) {
+        return;
+    }
+
+    lv_display_enable_invalidation(lvgl_display, false);
+    const bool weekday_changed = weather_widget->set_current_weekday(weekday_index);
+    lv_display_enable_invalidation(lvgl_display, true);
+
+    if (weekday_changed) {
+        refresh_widget(weather_widget);
+    }
 }
 
 void Display::refresh_widget(Widget *widget)
@@ -171,19 +186,6 @@ void Display::refresh_widget(Widget *widget)
 uint32_t Display::get_esp_time_cb()
 {
     return (uint32_t)(esp_timer_get_time() / 1000ULL);
-}
-
-void Display::expand_partial_refresh_area(lv_event_t *event)
-{
-    lv_area_t *area = lv_event_get_invalidated_area(event);
-    if (area == nullptr) {
-        return;
-    }
-
-    // Keep the dirty rows, but always redraw the whole horizontal band. This
-    // also gives opaque widget containers a chance to overwrite old glyphs.
-    area->x1 = PARTIAL_REFRESH_X1;
-    area->x2 = PARTIAL_REFRESH_X2;
 }
 
 void Display::set_test_screen_figures()

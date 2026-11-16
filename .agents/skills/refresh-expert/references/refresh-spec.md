@@ -20,9 +20,13 @@
 
 - Widget setters suppress their automatic label invalidation, change content, then invalidate the widget root.
 - Widget roots use an opaque white background so shorter text overwrites old glyphs.
-- LVGL expands every partial invalidation to `x = 0..799` while retaining the dirty Y range.
-- This full-width band is a Waveshare V2 workaround for corrupt non-zero-X partial windows.
-- Every partial update therefore transfers an 800-pixel-wide band; measure power and latency before enabling animated or high-frequency UI.
+- Runtime partial updates use LVGL's native invalidated rectangle.
+- A previous full-width `LV_EVENT_INVALIDATE_AREA` workaround exists in history because
+  non-zero-X partial windows had shown corruption. It is intentionally disabled after
+  hardware validation of native rectangles.
+- Never expand an area only in the EPD driver: the partial `px_map` contains only the
+  pixels LVGL rendered for its original area. Reconsider the full-width workaround only
+  if reproducible non-zero-X corruption returns.
 - `Epd::BeginPartialUpdate()` enters partial controller mode once per LVGL refresh cycle.
 - `Epd::WriteRegion()` configures `0x90`, writes direct LVGL I1 bytes through `0x13`, and does not visibly refresh.
 - `Epd::EndPartialUpdate()` sends `0x12` only after the last LVGL flush.
@@ -42,3 +46,4 @@
 - Hardware smoke test after cold boot: `XX:XX → 12:34`, then repeated minute changes.
 - Test longer-to-shorter Wi-Fi and weather values.
 - Confirm the first partial update after boot is clean and that repeated partial updates stay clean.
+- Test native-rectangle updates at non-zero X: Wi-Fi, clock/date, and forecast units.

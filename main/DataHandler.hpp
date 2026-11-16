@@ -4,6 +4,7 @@
 #include <string>
 #include <chrono>
 #include <ctime>
+#include <optional>
 
 #include "WeatherStation.hpp"
 
@@ -30,13 +31,14 @@ public:
     // Network Time Protocol, fetch clock sync from internet
     void sync_time_with_ntp();
 
-    void set_current_temperature(const std::string& temperature);
-    const std::string& get_current_temperature() const;
+    void set_current_temperature(int temperature);
+    const std::optional<int>& get_current_temperature() const;
 
     void set_current_date(const std::string& date);
     const std::string& get_current_date() const;
 
     const std::string& get_current_weekday() const;
+    int get_current_weekday_index() const;
 
     void set_current_time(const std::string& time);
     const std::string& get_current_time() const;
@@ -77,9 +79,10 @@ public:
 private:
     WeatherStation weather_station;
 
-    std::string current_temperature{};
+    std::optional<int> current_temperature{};
     std::string current_date{};
     std::string current_weekday{};
+    int current_weekday_index = -1;
     std::string current_time{};
     DataAvailable data_available{};
 
