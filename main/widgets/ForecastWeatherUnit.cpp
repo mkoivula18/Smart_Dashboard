@@ -4,7 +4,7 @@ void ForecastWeatherUnit::create_forecast(lv_obj_t *parent, lv_coord_t width,
                                           lv_coord_t height, const WeatherDayData &data)
 {
     if (view_.root() != nullptr)
-{
+    {
         update(data);
         return;
     }
@@ -15,7 +15,7 @@ void ForecastWeatherUnit::create_forecast(lv_obj_t *parent, lv_coord_t width,
     view_.set_weekday_position(LV_ALIGN_TOP_LEFT, 8, 6);
     view_.set_icon_position(LV_ALIGN_TOP_MID, 0, 28);
     view_.set_temperature_range_positions(LV_ALIGN_BOTTOM_MID, 0, -28,
-                                           LV_ALIGN_BOTTOM_MID, 0, -8);
+                                          LV_ALIGN_BOTTOM_MID, 0, -8);
     view_.render(data_);
 }
 

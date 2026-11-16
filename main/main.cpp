@@ -17,7 +17,8 @@
 // Comment out this line to return to the normal Wi-Fi, NTP, and API updates.
 // #define DISPLAY_REFRESH_TEST
 
-namespace {
+namespace
+{
 constexpr uint32_t DASHBOARD_UPDATE_INTERVAL_SECONDS = 40;
 
 #ifdef DISPLAY_REFRESH_TEST

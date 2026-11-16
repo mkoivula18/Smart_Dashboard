@@ -34,7 +34,8 @@ void EpdIf::DelayMs(unsigned int delaytime)
 
 void EpdIf::SpiTransfer(unsigned char data)
 {
-    if (spi_device == nullptr) {
+    if (spi_device == nullptr)
+    {
         printf("SpiTransfer: spi_device is null\n");
         return;
     }
@@ -52,7 +53,8 @@ void EpdIf::SpiTransfer(unsigned char data)
 
 void EpdIf::SpiTransferBuffer(unsigned char *buffer, size_t len)
 {
-    if (spi_device == nullptr) {
+    if (spi_device == nullptr)
+    {
         printf("SpiTransfer: spi_device is null\n");
         return;
     }

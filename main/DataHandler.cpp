@@ -1,8 +1,10 @@
 #include "DataHandler.hpp"
 #include "esp_netif_sntp.h"
 
-namespace {
-constexpr const char *VIIKONPAIVAT[] = {
+namespace
+{
+constexpr const char *VIIKONPAIVAT[] =
+{
     "Sunnuntai", "Maanantai", "Tiistai", "Keskiviikko",
     "Torstai", "Perjantai", "Lauantai",
 };
@@ -22,7 +24,8 @@ void DataHandler::sync_time_with_ntp()
     esp_netif_sntp_init(&config);
 
     printf("Waiting for NTP sync...\n");
-    if (esp_netif_sntp_sync_wait(pdMS_TO_TICKS(10000)) != ESP_OK) {
+    if (esp_netif_sntp_sync_wait(pdMS_TO_TICKS(10000)) != ESP_OK)
+    {
         printf("Time sync failed or timed out.\n");
         return;
     }

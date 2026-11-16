@@ -6,7 +6,7 @@ void CurrentWeatherUnit::create_current_day(lv_obj_t *parent, lv_coord_t width,
                                             lv_coord_t height, const CurrentWeatherData &data)
 {
     if (view_.root() != nullptr)
-{
+    {
         update(data);
         return;
     }
@@ -18,7 +18,7 @@ void CurrentWeatherUnit::create_current_day(lv_obj_t *parent, lv_coord_t width,
     view_.set_weekday_position(LV_ALIGN_TOP_LEFT, 8, 6);
     view_.set_icon_position(LV_ALIGN_TOP_LEFT, 8, 28);
     view_.set_temperature_range_positions(LV_ALIGN_BOTTOM_LEFT, 8, -28,
-                                           LV_ALIGN_BOTTOM_LEFT, 8, -8);
+                                          LV_ALIGN_BOTTOM_LEFT, 8, -8);
 
     // These labels belong only to the current-day unit, not to the shared view.
     current_caption_label_ = lv_label_create(view_.root());

@@ -32,7 +32,7 @@ std::optional<int> WeatherStation::get_current_temperature()
         return std::nullopt;
     }
 
-    ParserState parser_state{}; 
+    ParserState parser_state{};
 
     XML_Parser parser = XML_ParserCreate(nullptr);
 
@@ -42,7 +42,8 @@ std::optional<int> WeatherStation::get_current_temperature()
 
     XML_Status result = XML_Parse(parser, xml.c_str(), xml.size(), XML_TRUE);
 
-    if (result == XML_STATUS_ERROR) {
+    if (result == XML_STATUS_ERROR)
+    {
         ESP_LOGE(TAG, "XML parse error: %s",
                  XML_ErrorString(XML_GetErrorCode(parser)));
 
@@ -61,7 +62,8 @@ std::optional<int> WeatherStation::get_current_temperature()
     const float parsed_temperature = std::strtof(
         parser_state.latest_temperature.c_str(), &end);
 
-    if (end == parser_state.latest_temperature.c_str()) {
+    if (end == parser_state.latest_temperature.c_str())
+    {
         ESP_LOGW(TAG, "Invalid temperature value: %s",
                  parser_state.latest_temperature.c_str());
         XML_ParserFree(parser);
@@ -104,7 +106,7 @@ void end_element(void *user_data, const XML_Char *name)
     {
         parser_state->latest_time = parser_state->current_text;
     }
-    
+
     if (strcmp(name, "wml2:value") == 0)
     {
         parser_state->latest_temperature = parser_state->current_text;

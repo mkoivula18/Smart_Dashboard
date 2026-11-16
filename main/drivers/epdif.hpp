@@ -49,11 +49,15 @@
 #define MOSI_PIN    19
 #define SCK_PIN     21
 
-class EpdIf {
+class EpdIf
+{
 public:
-    EpdIf() { printf("EPDIF CREATED! :)\n"); }
+    EpdIf()
+    {
+        printf("EPDIF CREATED! :)\n");
+    }
     static int  IfInit(void);
-    static void DigitalWrite(int pin, int value); 
+    static void DigitalWrite(int pin, int value);
     static int  DigitalRead(int pin);
     static void DelayMs(unsigned int delaytime);
     static void SpiTransfer(unsigned char data);
